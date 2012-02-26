@@ -9,7 +9,7 @@
 const QRect Scene::DEFAULT_SCENE_RECT = QRect(0, 0, 900, 600);
 const QRect Scene::RECT_GEOMETRY = QRect(0, 0, 220, 180);
 const double Scene::POINT_RADIUS = 1;
-const int Scene::POINTS_COUNT = 1000000;
+const int Scene::POINTS_COUNT = 500000;
 const QColor Scene::INNER_POINT_COLOR = Qt::yellow;
 const QColor Scene::OUTER_POINT_COLOR = Qt::black;
 
@@ -70,7 +70,7 @@ void Scene::addRect()
 
 void Scene::removePoints() {
     m_points.clear();
-    m_pixmap->pixmap().fill(Qt::transparent);
+    m_pixmap->clear();
 }
 
 void Scene::regenerate(int pointsCount, QSize rectSize) {

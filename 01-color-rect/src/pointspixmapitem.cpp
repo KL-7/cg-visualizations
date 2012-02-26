@@ -2,11 +2,8 @@
 
 #include "pointspixmapitem.h"
 
-PointsPixmapItem::PointsPixmapItem(QSize size, QGraphicsScene *scene) : QGraphicsPixmapItem(0, scene) {
-    QPixmap pixmap(size);
-    pixmap.fill(Qt::transparent);
-    QPainter p(&pixmap);
-    setPixmap(pixmap);
+PointsPixmapItem::PointsPixmapItem(QSize size, QGraphicsScene *scene) : QGraphicsPixmapItem(0, scene), m_size(size) {
+    clear();
 }
 
 void PointsPixmapItem::drawPoints(const QList<QPointF> &points, QColor color) {
@@ -20,4 +17,10 @@ void PointsPixmapItem::drawPoints(const QList<QPointF> &points, QColor color) {
 
     painter.end();
     setPixmap(pixmapCopy);
+}
+
+void PointsPixmapItem::clear() {
+    QPixmap pixmap(m_size);
+    pixmap.fill(Qt::transparent);
+    setPixmap(pixmap);
 }
