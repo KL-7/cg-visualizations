@@ -5,21 +5,32 @@
 
 class QGraphicsEllipseItem;
 
+typedef QGraphicsEllipseItem Point;
+typedef QList<Point*> PointsList;
+
 struct Node {
     QRectF rect;
-    QList<QGraphicsEllipseItem*> points;
+    PointsList points;
     QList<struct Node*> children;
 
-    Node(QRectF rect, const QList<QGraphicsEllipseItem*> &points = QList<QGraphicsEllipseItem*>()) : rect(rect) {
+    Node(QRectF rect, const PointsList &points = PointsList()) : rect(rect) {
         this->points.append(points);
+    }
+
+    ~Node() {
+        foreach(struct Node* child, children) {
+            delete child;
+        }
     }
 } typedef Node;
 
 class QuadraticTree
 {
 public:
-    QuadraticTree(QRectF rect, const QList<QGraphicsEllipseItem*> &points);
-    const QList<QGraphicsEllipseItem*>& pointsInRect(QRect rect) const;
+    QuadraticTree(QRectF rect, const PointsList &points);
+    ~QuadraticTree() { delete m_root; }
+
+    void pointsInsideRect(const QRectF &rect, PointsList &pointsList) const;
     Node* root() { return m_root; }
 
 private:
@@ -27,7 +38,8 @@ private:
 
     static const int POINTS_PER_NODE;
 
-    void processNode(Node *node);
+    void generateChildren(Node *node);
+    void processNode(Node *node, const QRectF &rect, PointsList &itemsList) const;
 };
 
 #endif // QUADRATICTREE_H

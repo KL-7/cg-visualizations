@@ -4,12 +4,12 @@
 
 const int QuadraticTree::POINTS_PER_NODE = 4;
 
-QuadraticTree::QuadraticTree(QRectF rect, const QList<QGraphicsEllipseItem *> &points) {
+QuadraticTree::QuadraticTree(QRectF rect, const PointsList &points) {
     m_root = new Node(rect, points);
-    processNode(m_root);
+    generateChildren(m_root);
 }
 
-void QuadraticTree::processNode(Node *node) {
+void QuadraticTree::generateChildren(Node *node) {
     if (node->points.size() <= POINTS_PER_NODE) return;
 
     QRectF rect = QRectF(node->rect.topLeft(), node->rect.size() / 2);
@@ -20,7 +20,7 @@ void QuadraticTree::processNode(Node *node) {
         node->children.append(new Node(rect.translated(dx * rect.width(), dy * rect.height())));
     }
 
-    foreach (QGraphicsEllipseItem *point, node->points) {
+    foreach (Point *point, node->points) {
         foreach (Node *child, node->children) {
             if (child->rect.contains(point->scenePos())) {
                 child->points.append(point);
@@ -30,6 +30,31 @@ void QuadraticTree::processNode(Node *node) {
     }
 
     foreach (Node *child, node->children) {
-        processNode(child);
+        generateChildren(child);
+    }
+}
+
+void QuadraticTree::pointsInsideRect(const QRectF &rect, PointsList &pointsList) const {
+    pointsList.clear();
+    processNode(m_root, rect, pointsList);
+}
+
+void QuadraticTree::processNode(Node *node, const QRectF &rect, PointsList &pointsList) const {
+    if (!node->rect.intersects(rect)) return;
+
+    if (rect.contains(node->rect)) {
+        pointsList.append(node->points);
+    } else {
+        if (node->children.empty()) {
+            foreach (Point *point, node->points) {
+                if (rect.contains(point->pos())) {
+                    pointsList.append(point);
+                }
+            }
+        } else {
+            foreach (Node *child, node->children) {
+                processNode(child, rect, pointsList);
+            }
+        }
     }
 }

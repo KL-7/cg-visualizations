@@ -32,3 +32,19 @@ void MainWindow::regenerate() {
         m_scene->regenerate(dialog.pointsCount(), dialog.rectSize());
     }
 }
+
+void MainWindow::keyPressEvent(QKeyEvent *event) {
+    if (event->key() == Qt::Key_Alt) {
+        m_scene->switchMode(true);
+    }
+
+    QMainWindow::keyPressEvent(event);
+}
+
+void MainWindow::keyReleaseEvent(QKeyEvent *event) {
+    if (event->key() == Qt::Key_Alt) {
+        m_scene->switchMode(false);
+    }
+
+    QMainWindow::keyReleaseEvent(event);
+}

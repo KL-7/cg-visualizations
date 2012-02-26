@@ -3,6 +3,8 @@
 
 #include <QtGui/QGraphicsScene>
 
+class QuadraticTree;
+
 class Scene : public QGraphicsScene
 {
     Q_OBJECT
@@ -12,10 +14,14 @@ public:
     QSize rectSize() const;
     int pointsCount() const;
     void regenerate(int pointsCount, QSize rectSize);
+    void switchMode(bool fast);
 
 private:
+    bool m_fast;
     QList<QGraphicsEllipseItem*> m_points;
     QGraphicsRectItem *m_rect;
+    QuadraticTree *m_tree;
+    QList<QGraphicsEllipseItem*> m_pointsInsideRect;
 
     static const QRect DEFAULT_SCENE_RECT;
     static const QRect RECT_GEOMETRY;
