@@ -4,6 +4,7 @@
 #include <QtGui/QGraphicsScene>
 
 class QuadraticTree;
+class PointsPixmapItem;
 
 class Scene : public QGraphicsScene
 {
@@ -18,10 +19,13 @@ public:
 
 private:
     bool m_fast;
-    QList<QGraphicsEllipseItem*> m_points;
+
+    QList<QPointF> m_points;
+    QList<QPointF> m_pointsInsideRect;
+
     QGraphicsRectItem *m_rect;
     QuadraticTree *m_tree;
-    QList<QGraphicsEllipseItem*> m_pointsInsideRect;
+    PointsPixmapItem *m_pixmap;
 
     static const QRect DEFAULT_SCENE_RECT;
     static const QRect RECT_GEOMETRY;
@@ -31,7 +35,6 @@ private:
     static const QColor OUTER_POINT_COLOR;
 
     double rand(double max);
-    QGraphicsEllipseItem* randomPoint();
 
     void setRectSize(QSize rectSize);
     void regeneratePoints(int count);

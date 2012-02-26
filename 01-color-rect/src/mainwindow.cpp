@@ -5,6 +5,8 @@
 #include "scene.h"
 #include "regeneratedialog.h"
 
+const Qt::Key MainWindow::FAST_KEY = Qt::Key_Control;
+
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
     setupScene();
@@ -34,17 +36,11 @@ void MainWindow::regenerate() {
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *event) {
-    if (event->key() == Qt::Key_Alt) {
-        m_scene->switchMode(true);
-    }
-
+    if (event->key() == FAST_KEY) m_scene->switchMode(true);
     QMainWindow::keyPressEvent(event);
 }
 
 void MainWindow::keyReleaseEvent(QKeyEvent *event) {
-    if (event->key() == Qt::Key_Alt) {
-        m_scene->switchMode(false);
-    }
-
+    if (event->key() == FAST_KEY)  m_scene->switchMode(false);
     QMainWindow::keyReleaseEvent(event);
 }

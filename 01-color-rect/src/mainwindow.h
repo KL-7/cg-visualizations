@@ -16,11 +16,15 @@ public:
 
     void keyPressEvent(QKeyEvent *event);
     void keyReleaseEvent(QKeyEvent *event);
+
 private slots:
     void regenerate();
+
 private:
     Scene *m_scene;
     QGraphicsView *m_view;
+
+    static const Qt::Key FAST_KEY;
 
     void setupScene();
     void setupMenu();

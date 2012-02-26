@@ -5,8 +5,8 @@
 
 class QGraphicsEllipseItem;
 
-typedef QGraphicsEllipseItem Point;
-typedef QList<Point*> PointsList;
+typedef QPointF Point;
+typedef QList<Point> PointsList;
 
 struct Node {
     QRectF rect;

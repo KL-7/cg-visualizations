@@ -4,11 +4,12 @@
 #include "scene.h"
 #include "rect.h"
 #include "quadratictree.h"
+#include "pointspixmapitem.h"
 
 const QRect Scene::DEFAULT_SCENE_RECT = QRect(0, 0, 900, 600);
 const QRect Scene::RECT_GEOMETRY = QRect(0, 0, 220, 180);
 const double Scene::POINT_RADIUS = 1;
-const int Scene::POINTS_COUNT = 100000;
+const int Scene::POINTS_COUNT = 1000000;
 const QColor Scene::INNER_POINT_COLOR = Qt::yellow;
 const QColor Scene::OUTER_POINT_COLOR = Qt::black;
 
@@ -16,13 +17,16 @@ Scene::Scene(QObject *parent) : QGraphicsScene(parent), m_fast(false) {
     setBackgroundBrush(QColor("#DAEDDC"));
     setSceneRect(DEFAULT_SCENE_RECT);
 
+    m_pixmap = new PointsPixmapItem(sceneRect().size().toSize(), this);
+
     addRect();
     addPoints();
 }
 
 void Scene::addPoints(int count) {
     for (int i = 0; i < count; ++i) {
-        m_points.append(randomPoint());
+        QPointF point(rand(width()), rand(height()));
+        m_points.append(point);
     }
 
     m_tree = new QuadraticTree(sceneRect(), m_points);
@@ -46,16 +50,7 @@ void Scene::drawQuadraticTree() {
     }
 }
 
-QGraphicsEllipseItem* Scene::randomPoint()
-{
-    QGraphicsEllipseItem *point = new QGraphicsEllipseItem(0, 0, POINT_RADIUS, POINT_RADIUS, 0, this);
-    point->setPos(rand(width()), rand(height()));
-    point->setPen(QPen(OUTER_POINT_COLOR, POINT_RADIUS));
-    return point;
-}
-
-double Scene::rand(double max)
-{
+double Scene::rand(double max) {
     return max * qrand() / RAND_MAX;
 }
 
@@ -74,11 +69,8 @@ void Scene::addRect()
 }
 
 void Scene::removePoints() {
-    foreach (QGraphicsItem *point, m_points) {
-        removeItem(point);
-    }
-
     m_points.clear();
+    m_pixmap->pixmap().fill(Qt::transparent);
 }
 
 void Scene::regenerate(int pointsCount, QSize rectSize) {
@@ -103,22 +95,23 @@ void Scene::switchMode(bool fast) {
 }
 
 void Scene::recolorPoints() {
+    QList<QPointF> innerPoints, outerPoints;
+    QRectF rect = m_rect->mapToScene(m_rect->rect()).boundingRect();
+
     if (m_fast) {
-        foreach (QGraphicsEllipseItem *point, m_pointsInsideRect) {
-            point->setPen(QPen(OUTER_POINT_COLOR, POINT_RADIUS));
-        }
-
+        outerPoints = m_pointsInsideRect;
         m_tree->pointsInsideRect(m_rect->sceneBoundingRect(), m_pointsInsideRect);
-
-        foreach (QGraphicsEllipseItem *point, m_pointsInsideRect) {
-            point->setPen(QPen(INNER_POINT_COLOR, POINT_RADIUS));
-        }
+        innerPoints = m_pointsInsideRect;
     } else {
-        foreach (QGraphicsEllipseItem *point, m_points) {
-            QColor color = m_rect->rect().contains(m_rect->mapFromScene(point->scenePos())) ? INNER_POINT_COLOR : OUTER_POINT_COLOR;
-            if (point->pen().color() != color) {
-                point->setPen(QPen(color, POINT_RADIUS));
+        foreach (QPointF point, m_points) {
+            if (rect.contains(point)) {
+                innerPoints.append(point);
+            } else {
+                outerPoints.append(point);
             }
         }
     }
+
+    m_pixmap->drawPoints(outerPoints, OUTER_POINT_COLOR);
+    m_pixmap->drawPoints(innerPoints, INNER_POINT_COLOR);
 }

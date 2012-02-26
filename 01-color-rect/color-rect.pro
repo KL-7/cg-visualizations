@@ -27,13 +27,15 @@ SOURCES += src/main.cpp\
     src/scene.cpp \
     src/rect.cpp \
     src/regeneratedialog.cpp \
-    src/quadratictree.cpp
+    src/quadratictree.cpp \
+    src/pointspixmapitem.cpp
 
 HEADERS  += src/mainwindow.h \
     src/scene.h \
     src/rect.h \
     src/regeneratedialog.h \
-    src/quadratictree.h
+    src/quadratictree.h \
+    src/pointspixmapitem.h
 
 FORMS += \
     ui/regeneratedialog.ui
