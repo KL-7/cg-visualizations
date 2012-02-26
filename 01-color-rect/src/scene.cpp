@@ -9,7 +9,7 @@
 const QRect Scene::DEFAULT_SCENE_RECT = QRect(0, 0, 900, 600);
 const QRect Scene::RECT_GEOMETRY = QRect(0, 0, 220, 180);
 const double Scene::POINT_RADIUS = 1;
-const int Scene::POINTS_COUNT = 500000;
+const int Scene::POINTS_COUNT = 100000;
 const QColor Scene::INNER_POINT_COLOR = Qt::yellow;
 const QColor Scene::OUTER_POINT_COLOR = Qt::black;
 
