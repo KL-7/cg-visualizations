@@ -23,9 +23,6 @@ void MainWindow::setupScene() {
 }
 
 void MainWindow::setupMenu() {
-    menuBar()->addAction(tr("&Color"), this, SLOT(colorIntersections()));
-}
-
-void MainWindow::colorIntersections() {
-    m_scene->colorIntersections();
+    menuBar()->addAction(tr("&Color"), m_scene, SLOT(colorIntersections()));
+    menuBar()->addAction(tr("&Fast Color"), m_scene, SLOT(fastColorIntersections()));
 }

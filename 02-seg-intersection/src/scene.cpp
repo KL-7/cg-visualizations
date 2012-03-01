@@ -3,6 +3,7 @@
 
 #include "scene.h"
 #include "pixmapitem.h"
+#include "bentleyottmann.h"
 
 const QRect Scene::DEFAULT_SCENE_RECT = QRect(0, 0, 900, 600);
 const int Scene::SEGMENTS_COUNT = 10000;
@@ -45,4 +46,9 @@ void Scene::colorIntersections() {
     }
 
     m_pixmap->drawPoints(points, INTERSECTION_COLOR, POINT_RADIUS);
+}
+
+void Scene::fastColorIntersections() {
+    BentleyOttmann alg(m_segments);
+    m_pixmap->drawPoints(alg.intersectionPoints(), INTERSECTION_COLOR, POINT_RADIUS);
 }

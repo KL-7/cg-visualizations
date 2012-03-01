@@ -23,8 +23,10 @@ RCC_DIR = tmp
 SOURCES += src/main.cpp\
     src/mainwindow.cpp \
     src/scene.cpp \
-    src/pixmapitem.cpp
+    src/pixmapitem.cpp \
+    src/bentleyottmann.cpp
 
 HEADERS  += src/mainwindow.h \
     src/scene.h \
-    src/pixmapitem.h
+    src/pixmapitem.h \
+    src/bentleyottmann.h

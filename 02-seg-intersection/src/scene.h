@@ -12,7 +12,10 @@ class Scene : public QGraphicsScene
 public:
     explicit Scene(QObject *parent = 0);
     void regenerate(int pointsCount, QSize rectSize);
+
+public slots:
     void colorIntersections();
+    void fastColorIntersections();
 
 private:
     QVector<QLineF> m_segments;
