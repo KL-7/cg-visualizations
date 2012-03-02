@@ -14,9 +14,6 @@ public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow() {}
 
-private slots:
-    void colorIntersections();
-
 private:
     Scene *m_scene;
     QGraphicsView *m_view;

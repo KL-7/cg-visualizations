@@ -1,8 +1,18 @@
 #include "bentleyottmann.h"
 
-BentleyOttmann::BentleyOttmann(const QVector<QLineF> &segments) : m_segments(segments) {
+QVector<QPointF> BentleyOttmann::intersectionPoints() {
+    PointsSet points(&pointComp);
+    set<QLineF> currentSegments;
+    QVector<QPointF> intersectionPoints;
+
+    foreach (QLineF segment, m_segments) {
+        points.insert(segment.p1());
+        points.insert(segment.p1());
+    }
+
+    return intersectionPoints;
 }
 
-QVector<QPointF> BentleyOttmann::intersectionPoints() {
-
+bool BentleyOttmann::pointComp(const Point &a, const Point &b) {
+    return a.point->x() < b.point->x();
 }
