@@ -6,13 +6,13 @@ PointsPixmapItem::PointsPixmapItem(QSize size, QGraphicsScene *scene) : QGraphic
     clear();
 }
 
-void PointsPixmapItem::drawPoints(const QList<QPointF> &points, QColor color) {
+void PointsPixmapItem::drawPoints(const QList<QPointF*> &points, QColor color) {
     QPixmap pixmapCopy = pixmap();
     QPainter painter(&pixmapCopy);
     painter.setPen(color);
 
-    foreach (QPointF point, points) {
-        painter.drawPoint(point);
+    foreach (QPointF *point, points) {
+        painter.drawPoint(*point);
     }
 
     painter.end();

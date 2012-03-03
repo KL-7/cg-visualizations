@@ -20,9 +20,9 @@ void QuadraticTree::generateChildren(Node *node) {
         node->children.append(new Node(rect.translated(dx * rect.width(), dy * rect.height())));
     }
 
-    foreach (Point point, node->points) {
+    foreach (Point *point, node->points) {
         foreach (Node *child, node->children) {
-            if (child->rect.contains(point)) {
+            if (child->rect.contains(*point)) {
                 child->points.append(point);
                 break;
             }
@@ -46,8 +46,8 @@ void QuadraticTree::processNode(Node *node, const QRectF &rect, PointsList &poin
         pointsList.append(node->points);
     } else {
         if (node->children.empty()) {
-            foreach (Point point, node->points) {
-                if (rect.contains(point)) {
+            foreach (Point *point, node->points) {
+                if (rect.contains(*point)) {
                     pointsList.append(point);
                 }
             }

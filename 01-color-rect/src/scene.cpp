@@ -6,10 +6,10 @@
 #include "quadratictree.h"
 #include "pointspixmapitem.h"
 
-const QRect Scene::DEFAULT_SCENE_RECT = QRect(0, 0, 900, 600);
+const QRect Scene::DEFAULT_SCENE_RECT = QRect(0, 0, 1400, 850);
 const QRect Scene::RECT_GEOMETRY = QRect(0, 0, 220, 180);
 const double Scene::POINT_RADIUS = 1;
-const int Scene::POINTS_COUNT = 100000;
+const int Scene::POINTS_COUNT = 1000000;
 const QColor Scene::INNER_POINT_COLOR = Qt::yellow;
 const QColor Scene::OUTER_POINT_COLOR = Qt::black;
 
@@ -25,7 +25,7 @@ Scene::Scene(QObject *parent) : QGraphicsScene(parent), m_fast(false) {
 
 void Scene::addPoints(int count) {
     for (int i = 0; i < count; ++i) {
-        QPointF point(rand(width()), rand(height()));
+        QPointF *point = new QPointF(rand(width()), rand(height()));
         m_points.append(point);
     }
 
@@ -95,23 +95,22 @@ void Scene::switchMode(bool fast) {
 }
 
 void Scene::recolorPoints() {
-    QList<QPointF> innerPoints, outerPoints;
     QRectF rect = m_rect->mapToScene(m_rect->rect()).boundingRect();
 
     if (m_fast) {
-        outerPoints = m_pointsInsideRect;
+        m_pixmap->drawPoints(m_pointsInsideRect, OUTER_POINT_COLOR);
         m_tree->pointsInsideRect(m_rect->sceneBoundingRect(), m_pointsInsideRect);
-        innerPoints = m_pointsInsideRect;
+        m_pixmap->drawPoints(m_pointsInsideRect, INNER_POINT_COLOR);
     } else {
-        foreach (QPointF point, m_points) {
-            if (rect.contains(point)) {
+        QList<QPointF*> innerPoints, outerPoints;
+        foreach (QPointF *point, m_points) {
+            if (rect.contains(*point)) {
                 innerPoints.append(point);
             } else {
                 outerPoints.append(point);
             }
         }
+        m_pixmap->drawPoints(outerPoints, OUTER_POINT_COLOR);
+        m_pixmap->drawPoints(innerPoints, INNER_POINT_COLOR);
     }
-
-    m_pixmap->drawPoints(outerPoints, OUTER_POINT_COLOR);
-    m_pixmap->drawPoints(innerPoints, INNER_POINT_COLOR);
 }

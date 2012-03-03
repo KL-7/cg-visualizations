@@ -20,8 +20,8 @@ public:
 private:
     bool m_fast;
 
-    QList<QPointF> m_points;
-    QList<QPointF> m_pointsInsideRect;
+    QList<QPointF*> m_points;
+    QList<QPointF*> m_pointsInsideRect;
 
     QGraphicsRectItem *m_rect;
     QuadraticTree *m_tree;

@@ -6,7 +6,7 @@
 class QGraphicsEllipseItem;
 
 typedef QPointF Point;
-typedef QList<Point> PointsList;
+typedef QList<Point*> PointsList;
 
 struct Node {
     QRectF rect;
