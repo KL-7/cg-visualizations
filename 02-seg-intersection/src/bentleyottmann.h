@@ -10,6 +10,8 @@ struct Point {
     QPointF *point;
     QLineF *segment;
     bool isLeftEnd;
+
+    Point(QPointF *point, QLineF *segment, bool isLeftEnd) : point(point), segment(segment), isLeftEnd(isLeftEnd) { }
 } typedef Point;
 
 typedef set<Point, bool (*) (const Point&, const Point&)> PointsSet;
@@ -22,8 +24,6 @@ public:
 
 private:
     QVector<QLineF> m_segments;
-
-    bool pointComp(const Point &a, const Point &b);
 };
 
 #endif // BENTLEYOTTMANN_H
