@@ -1,14 +1,14 @@
 #include "bentleyottmann.h"
 
 QVector<QPointF> BentleyOttmann::intersectionPoints() {
-    PointsSet points(&pointComp);
+//    PointsSet points(&pointComp);
     set<QLineF> currentSegments;
     QVector<QPointF> intersectionPoints;
 
-    foreach (QLineF segment, m_segments) {
-        points.insert(segment.p1());
-        points.insert(segment.p1());
-    }
+//    foreach (QLineF segment, m_segments) {
+//        points.insert(segment.p1());
+//        points.insert(segment.p1());
+//    }
 
     return intersectionPoints;
 }

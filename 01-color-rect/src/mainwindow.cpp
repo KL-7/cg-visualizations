@@ -25,7 +25,9 @@ void MainWindow::setupScene() {
 }
 
 void MainWindow::setupMenu() {
-    menuBar()->addAction(tr("&Regenerate"), this, SLOT(regenerate()));
+    QMenu *menu = new QMenu(tr("File"), this);
+    menu->addAction(tr("&Regenerate"), this, SLOT(regenerate()));
+    menuBar()->addMenu(menu);
 }
 
 void MainWindow::regenerate() {
