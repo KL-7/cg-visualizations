@@ -23,8 +23,8 @@ void MainWindow::setupScene() {
 }
 
 void MainWindow::setupMenu() {
-    QMenu *menu = new QMenu(tr("File"), this);
+    QMenu *menu = new QMenu(tr("&File"), this);
     menu->addAction(tr("&Color"), m_scene, SLOT(colorIntersections()));
-    menu->addAction(tr("&Fast Color"), m_scene, SLOT(fastColorIntersections()));
+    menu->addAction(tr("F&ast Color"), m_scene, SLOT(fastColorIntersections()));
     menuBar()->addMenu(menu);
 }

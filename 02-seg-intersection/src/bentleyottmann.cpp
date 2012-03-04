@@ -1,7 +1,7 @@
 #include "bentleyottmann.h"
 
 bool pointComp(const Point *a, const Point *b) {
-    return a->p->x() < b->p->x();
+    return a->p.x() < b->p.x();
 }
 
 QVector<QPointF> BentleyOttmann::intersectionPoints() {
@@ -14,28 +14,45 @@ QVector<QPointF> BentleyOttmann::intersectionPoints() {
     PointsSet points(&pointComp);
     SegmentComparator comp(sweepPoint);
     SegmentsSet currentSegments(comp);
-    map<QLineF*, int> ranks;
 
-    foreach (QLineF segment, m_segments) {
-        points.insert(new Point(&segment.p1(), &segment, segment.p1().x() <= segment.p2().x()));
-        points.insert(new Point(&segment.p2(), &segment, segment.p2().x() < segment.p1().x()));
+    for (int i = 0; i < m_segments.size(); ++i) {
+        QLineF s = m_segments[i];
+        Segment *segment = new Segment(&m_segments[i], i);
+        points.insert(new Point(m_segments[i].p1(), segment, s.p1().x() <= s.p2().x()));
+        points.insert(new Point(m_segments[i].p2(), segment, s.p2().x() < s.p1().x()));
     }
-
-    int currentRank = 0;
 
     while (!points.empty()) {
         newPoints.clear();
+
         Point *p = *points.begin();
         points.erase(points.begin());
-        sweepPoint->setX(p->p->x());
-        sweepPoint->setY(p->p->y());
+
+        sweepPoint->setX(p->p.x());
+        sweepPoint->setY(p->p.y());
 
         if (p->s2 != 0) {
+            Segment *s1 = p->s1;
+            Segment *s2 = p->s2;
 
+            if (s1->slope() > s2->slope()) {
+                Segment *tmp = s1;
+                s1 = s2;
+                s2 = tmp;
+            }
+
+            SegmentsSet::iterator s3 = currentSegments.upper_bound(s1);
+            SegmentsSet::iterator s4 = ++currentSegments.lower_bound(s2);
+
+            if (s3 != currentSegments.end() && (tmpPoint = rightIntersection(s2, *s3, sweepPoint))) {
+                newPoints << tmpPoint;
+            }
+
+            if (s4 != currentSegments.end() && (tmpPoint = rightIntersection(s1, *s4, sweepPoint))) {
+                newPoints << tmpPoint;
+            }
         } else if (p->left) {
-            int rank = currentRank++;
-            ranks[p->s1] = rank;
-            Segment *s = new Segment(p->s1, rank);
+            Segment *s = p->s1;
 
             currentSegments.insert(s);
 
@@ -50,7 +67,7 @@ QVector<QPointF> BentleyOttmann::intersectionPoints() {
                 newPoints << tmpPoint;
             }
         } else /* if (!p.left) */ {
-            Segment *s = new Segment(p->s1, ranks[p->s1]);
+            Segment *s = p->s1;
 
             SegmentsSet::iterator s1 = currentSegments.upper_bound(s);
             SegmentsSet::iterator s2 = ++currentSegments.lower_bound(s);
@@ -61,11 +78,22 @@ QVector<QPointF> BentleyOttmann::intersectionPoints() {
 
             currentSegments.erase(s);
         }
+
+        foreach (Point *p, newPoints) {
+            intersectionPoints << p->p;
+            points.insert(p);
+        }
     }
 
     return intersectionPoints;
 }
 
 Point* BentleyOttmann::rightIntersection(Segment *s1, Segment *s2, const QPointF *p) {
-    return 0;
+    QPointF intersectionPoint;
+    QLineF::IntersectType intersecitonType = s1->s->intersect(*s2->s, &intersectionPoint);
+    if (intersecitonType == QLineF::BoundedIntersection && intersectionPoint.y() > p->y()) {
+        return new Point(intersectionPoint, s1, false, s2);
+    } else {
+        return 0;
+    }
 }

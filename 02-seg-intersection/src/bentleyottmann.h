@@ -7,15 +7,6 @@
 
 using namespace std;
 
-struct Point {
-    QPointF *p;
-    QLineF *s1;
-    QLineF *s2;
-    bool left;
-
-    Point(QPointF *point, QLineF *segment1, bool isLeftEnd, QLineF *segment2 = 0)
-        : p(point), s1(segment1), s2(segment2), left(isLeftEnd) { }
-} typedef Point;
 
 struct Segment {
     QLineF *s;
@@ -24,9 +15,28 @@ struct Segment {
     Segment(QLineF *segment, int rank) : s(segment), rank(rank) { }
 
     qreal high(const QPointF* p) const {
-        return s->p1().y() + (s->p2().y() - s->p1().y()) / (s->p2().x() - s->p1().x()) * (p->x() - s->p1().x());
+        QPointF intersectionPoint;
+        s->intersect(QLineF(*p, *p + QPointF(0, 1)), &intersectionPoint);
+        return intersectionPoint.y();
+//        return s->p1().y() + (s->p2().y() - s->p1().y()) / (s->p2().x() - s->p1().x()) * (p->x() - s->p1().x());
+    }
+
+    qreal slope() const {
+        return (s->p1().y() - s->p2().y()) / (s->p1().x() - s->p2().x());
     }
 } typedef Segment;
+
+
+struct Point {
+    QPointF p;
+    Segment *s1;
+    Segment *s2;
+    bool left;
+
+    Point(QPointF point, Segment *segment1, bool isLeftEnd, Segment *segment2 = 0)
+        : p(point), s1(segment1), s2(segment2), left(isLeftEnd) { }
+} typedef Point;
+
 
 struct SegmentComparator {
     const QPointF *sweepPoint;
@@ -38,8 +48,10 @@ struct SegmentComparator {
     }
 } typedef SegmentComparator;
 
+
 typedef set<Point*, bool (*) (const Point*, const Point*)> PointsSet;
 typedef set<Segment*, SegmentComparator> SegmentsSet;
+
 
 class BentleyOttmann
 {
