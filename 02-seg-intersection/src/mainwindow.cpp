@@ -5,8 +5,6 @@
 #include "scene.h"
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
-    qsrand(QTime::currentTime().msec());
-
     setupScene();
     setupMenu();
 

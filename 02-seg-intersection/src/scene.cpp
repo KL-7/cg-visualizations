@@ -20,6 +20,8 @@ Scene::Scene(QObject *parent) : QGraphicsScene(parent) {
 }
 
 void Scene::generateSegments(int count) {
+    qsrand(QTime::currentTime().msec());
+
     for (int i = 0; i < count; ++i) {
         QPointF point(rand(width()), rand(height()));
         QLineF segment(point, point + QPointF(SEGMENT_LENGTH, 0));

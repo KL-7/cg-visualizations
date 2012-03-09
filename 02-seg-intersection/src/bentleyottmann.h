@@ -41,10 +41,12 @@ struct Point {
 struct SegmentComparator {
     const QPointF *sweepPoint;
 
+    static const double EPS = 1e-5;
+
     SegmentComparator(const QPointF *sweepPoint) : sweepPoint(sweepPoint) { }
 
     bool operator() (const Segment *a, const Segment *b) {
-        return a->high(sweepPoint) == b->high(sweepPoint) ? a->rank < b->rank : a->high(sweepPoint) < b->high(sweepPoint);
+        return qAbs(a->high(sweepPoint) - b->high(sweepPoint)) <= EPS ? a->rank < b->rank : a->high(sweepPoint) < b->high(sweepPoint);
     }
 } typedef SegmentComparator;
 

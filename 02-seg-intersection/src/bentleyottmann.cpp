@@ -51,6 +51,16 @@ QVector<QPointF> BentleyOttmann::intersectionPoints() {
             if (s4 != currentSegments.end() && (tmpPoint = rightIntersection(s1, *s4, sweepPoint))) {
                 newPoints << tmpPoint;
             }
+
+            currentSegments.erase(s1);
+            currentSegments.erase(s2);
+
+            int tmp = s1->rank;
+            s1->rank = s2->rank;
+            s2->rank = tmp;
+
+            currentSegments.insert(s1);
+            currentSegments.insert(s2);
         } else if (p->left) {
             Segment *s = p->s1;
 
@@ -70,7 +80,11 @@ QVector<QPointF> BentleyOttmann::intersectionPoints() {
             Segment *s = p->s1;
 
             SegmentsSet::iterator s1 = currentSegments.upper_bound(s);
-            SegmentsSet::iterator s2 = ++currentSegments.lower_bound(s);
+            SegmentsSet::iterator s2 = currentSegments.lower_bound(s);
+
+            if (s2 != currentSegments.end()) {
+                ++s2;
+            }
 
             if (s1 != currentSegments.end() && s2 != currentSegments.end() && (tmpPoint = rightIntersection(*s1, *s2, sweepPoint))) {
                 newPoints << tmpPoint;
