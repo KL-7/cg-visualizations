@@ -65,6 +65,10 @@ void Scene::colorIntersections() {
 
     QVector<QPointF> points;
     QPointF point;
+
+    QTime timer;
+    timer.start();
+
     for (int i = 0; i < m_segments.size() - 1; ++i) {
         for (int j = i + 1; j < m_segments.size(); ++j) {
             if (QLineF::BoundedIntersection == m_segments[i].intersect(m_segments[j], &point)) {
@@ -73,6 +77,8 @@ void Scene::colorIntersections() {
         }
     }
 
+    qDebug() << "slow: " << timer.elapsed() << "ms";
+
     m_pixmap->drawPoints(points, INTERSECTION_COLOR, POINT_RADIUS);
 }
 
@@ -80,5 +86,13 @@ void Scene::fastColorIntersections() {
     redrawSegments();
 
     BentleyOttmann alg(m_segments);
-    m_pixmap->drawPoints(alg.intersectionPoints(), INTERSECTION_COLOR, POINT_RADIUS);
+
+    QTime timer;
+    timer.start();
+
+    QVector<QPointF> points = alg.intersectionPoints();
+
+    qDebug() << "fast: " << timer.elapsed() << "ms";
+
+    m_pixmap->drawPoints(points, INTERSECTION_COLOR, POINT_RADIUS);
 }

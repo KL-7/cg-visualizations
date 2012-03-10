@@ -1,7 +1,7 @@
 #include "bentleyottmann.h"
 
 bool pointComp(const Point *a, const Point *b) {
-    return a->p.x() == b->p.x() ? a->rank < b->rank : a->p.x() < b->p.x();
+    return a->p.x() < b->p.x();
 }
 
 QVector<QPointF> BentleyOttmann::intersectionPoints() {
@@ -18,8 +18,8 @@ QVector<QPointF> BentleyOttmann::intersectionPoints() {
     for (int i = 0; i < m_segments.size(); ++i) {
         QLineF s = m_segments[i];
         Segment *segment = new Segment(&m_segments[i], i);
-        points.insert(new Point(m_segments[i].p1(), points.size(), segment, s.p1().x() <= s.p2().x()));
-        points.insert(new Point(m_segments[i].p2(), points.size(), segment, s.p2().x() < s.p1().x()));
+        points.insert(new Point(m_segments[i].p1(), segment, s.p1().x() <= s.p2().x()));
+        points.insert(new Point(m_segments[i].p2(), segment, s.p2().x() < s.p1().x()));
     }
 
     while (!points.empty()) {
@@ -44,14 +44,14 @@ QVector<QPointF> BentleyOttmann::intersectionPoints() {
 
             SegmentsSet::iterator s3 = currentSegments->upper_bound(s1);
 
-            if (s3 != currentSegments->end() && (tmpPoint = rightIntersection(s2, *s3, sweepPoint, points.size()))) {
+            if (s3 != currentSegments->end() && (tmpPoint = rightIntersection(s2, *s3, sweepPoint))) {
                 newPoints << tmpPoint;
             }
 
             SegmentsSet::iterator s4 = currentSegments->lower_bound(s2);
             s4 = (s4 != currentSegments->begin()) ? --s4 : currentSegments->end();
 
-            if (s4 != currentSegments->end() && (tmpPoint = rightIntersection(s1, *s4, sweepPoint, points.size()))) {
+            if (s4 != currentSegments->end() && (tmpPoint = rightIntersection(s1, *s4, sweepPoint))) {
                 newPoints << tmpPoint;
             }
 
@@ -73,11 +73,11 @@ QVector<QPointF> BentleyOttmann::intersectionPoints() {
             SegmentsSet::iterator s2 = currentSegments->lower_bound(s);
             s2 = (s2 != currentSegments->begin()) ? --s2 : currentSegments->end();
 
-            if (s1 != currentSegments->end() && (tmpPoint = rightIntersection(s, *s1, sweepPoint, points.size()))) {
+            if (s1 != currentSegments->end() && (tmpPoint = rightIntersection(s, *s1, sweepPoint))) {
                 newPoints << tmpPoint;
             }
 
-            if (s2 != currentSegments->end() && (tmpPoint = rightIntersection(s, *s2, sweepPoint, points.size()))) {
+            if (s2 != currentSegments->end() && (tmpPoint = rightIntersection(s, *s2, sweepPoint))) {
                 newPoints << tmpPoint;
             }
         } else /* if (!p.left) */ {
@@ -88,7 +88,7 @@ QVector<QPointF> BentleyOttmann::intersectionPoints() {
             SegmentsSet::iterator s2 = currentSegments->lower_bound(s);
             s2 = (s2 != currentSegments->begin()) ? --s2 : currentSegments->end();
 
-            if (s1 != currentSegments->end() && s2 != currentSegments->end() && (tmpPoint = rightIntersection(*s1, *s2, sweepPoint, points.size()))) {
+            if (s1 != currentSegments->end() && s2 != currentSegments->end() && (tmpPoint = rightIntersection(*s1, *s2, sweepPoint))) {
                 newPoints << tmpPoint;
             }
 
@@ -96,20 +96,22 @@ QVector<QPointF> BentleyOttmann::intersectionPoints() {
         }
 
         foreach (Point *p, newPoints) {
-            intersectionPoints << p->p;
-            points.insert(p);
+            pair<PointsSet::iterator, bool> result = points.insert(p);
+            if (result.second) {
+                intersectionPoints << p->p;
+            }
         }
     }
 
     return intersectionPoints;
 }
 
-Point* BentleyOttmann::rightIntersection(Segment *s1, Segment *s2, const QPointF *p, int rank) {
+Point* BentleyOttmann::rightIntersection(Segment *s1, Segment *s2, const QPointF *p) {
     QPointF intersectionPoint;
     QLineF::IntersectType intersecitonType = s1->s->intersect(*s2->s, &intersectionPoint);
 
     if (intersecitonType == QLineF::BoundedIntersection && intersectionPoint.x() > p->x()) {
-        return new Point(intersectionPoint, rank, s1, false, s2);
+        return new Point(intersectionPoint, s1, false, s2);
     } else {
         return 0;
     }

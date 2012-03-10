@@ -28,13 +28,12 @@ struct Segment {
 
 struct Point {
     QPointF p;
-    int rank;
     Segment *s1;
     Segment *s2;
     bool left;
 
-    Point(QPointF point, int rank, Segment *segment1, bool isLeftEnd, Segment *segment2 = 0)
-        : p(point), rank(rank), s1(segment1), s2(segment2), left(isLeftEnd) { }
+    Point(QPointF point, Segment *segment1, bool isLeftEnd, Segment *segment2 = 0)
+        : p(point), s1(segment1), s2(segment2), left(isLeftEnd) { }
 } typedef Point;
 
 
@@ -68,7 +67,7 @@ private:
     QVector<QLineF> m_segments;
     SegmentsSet *currentSegments;
 
-    Point* rightIntersection(Segment *s1, Segment *s2, const QPointF *p, int rank);
+    Point* rightIntersection(Segment *s1, Segment *s2, const QPointF *p);
 };
 
 #endif // BENTLEYOTTMANN_H
