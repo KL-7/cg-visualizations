@@ -14,8 +14,6 @@ win32 {
 	CONFIG += release
 }
 
-#DEFINES = QT_NO_DEBUG_OUTPUT
-
 # Anti-trash
 OBJECTS_DIR = tmp
 MOC_DIR = tmp

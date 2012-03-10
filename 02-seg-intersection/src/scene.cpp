@@ -5,16 +5,13 @@
 #include "pixmapitem.h"
 #include "bentleyottmann.h"
 
-const QRect Scene::DEFAULT_SCENE_RECT = QRect(0, 0, 200, 150);
-//const QRect Scene::DEFAULT_SCENE_RECT = QRect(0, 0, 1400, 850);
+const QRect Scene::DEFAULT_SCENE_RECT = QRect(0, 0, 1400, 850);
 
-const int Scene::SEGMENTS_COUNT = 5;
-//const int Scene::SEGMENTS_COUNT = 20000;
+const int Scene::SEGMENTS_COUNT = 20000;
 
 const int Scene::POINT_RADIUS = 2;
 
-const double Scene::SEGMENT_LENGTH = 100;
-//const double Scene::SEGMENT_LENGTH = 30;
+const double Scene::SEGMENT_LENGTH = 30;
 
 const QColor Scene::SEGMENT_COLOR = Qt::black;
 const QColor Scene::INTERSECTION_COLOR = Qt::blue;
@@ -29,24 +26,18 @@ Scene::Scene(QObject *parent) : QGraphicsScene(parent) {
 void Scene::generateSegments(int count) {
     m_segments.clear();
 
-//    int seed = QTime::currentTime().msec(); qDebug() << seed; qsrand(seed);
-    qsrand(266);
+    qsrand(QTime::currentTime().msec());
 
     for (int i = 0; i < count; ++i) {
-//        QPointF point(rand(width()), rand(height()));
-//        QLineF segment(point, point + QPointF(SEGMENT_LENGTH, 0));
-//        segment.setAngle(rand(360));
-//        m_segments << segment;
-
-        QPointF p1(rand(width()), rand(height())), p2(rand(width()), rand(height()));
-        if (p1.x() > p2.x()) { QPointF tmp = p1; p1 = p2; p2 = tmp; }
-        m_segments << QLineF(p1, p2);
+        QPointF point(rand(width()), rand(height()));
+        QLineF segment(point, point + QPointF(SEGMENT_LENGTH, 0));
+        segment.setAngle(rand(360));
+        m_segments << segment;
     }
 }
 
 void Scene::regenerateSegments() {
     generateSegments();
-//    addsegments();
     redrawSegments();
 }
 
