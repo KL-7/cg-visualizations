@@ -17,25 +17,31 @@ struct Segment {
     qreal high(const QPointF* p) const {
         QPointF intersectionPoint;
         s->intersect(QLineF(*p, *p + QPointF(0, 1)), &intersectionPoint);
+//        qDebug() << "hight: " << *s << ", " << *p << " - " << intersectionPoint.y();
         return intersectionPoint.y();
 //        return s->p1().y() + (s->p2().y() - s->p1().y()) / (s->p2().x() - s->p1().x()) * (p->x() - s->p1().x());
     }
 
     qreal slope() const {
-        return (s->p1().y() - s->p2().y()) / (s->p1().x() - s->p2().x());
+        return (s->p2().y() - s->p1().y()) / (s->p2().x() - s->p1().x());
     }
 } typedef Segment;
 
 
 struct Point {
     QPointF p;
+    int rank;
     Segment *s1;
     Segment *s2;
     bool left;
 
-    Point(QPointF point, Segment *segment1, bool isLeftEnd, Segment *segment2 = 0)
-        : p(point), s1(segment1), s2(segment2), left(isLeftEnd) { }
+    Point(QPointF point, int rank, Segment *segment1, bool isLeftEnd, Segment *segment2 = 0)
+        : p(point), rank(rank), s1(segment1), s2(segment2), left(isLeftEnd) { }
 } typedef Point;
+
+
+QDebug operator<<(QDebug dbg, const Segment &s);
+QDebug operator<<(QDebug dbg, const Point &p);
 
 
 struct SegmentComparator {
@@ -45,8 +51,16 @@ struct SegmentComparator {
 
     SegmentComparator(const QPointF *sweepPoint) : sweepPoint(sweepPoint) { }
 
-    bool operator() (const Segment *a, const Segment *b) {
-        return qAbs(a->high(sweepPoint) - b->high(sweepPoint)) <= EPS ? a->rank < b->rank : a->high(sweepPoint) < b->high(sweepPoint);
+    bool operator() (const Segment *a, const Segment *b) { 
+        double ah = a->high(sweepPoint);
+        double bh = b->high(sweepPoint);
+
+        bool result = a != b && (qAbs(ah - bh) <= EPS ? a->rank < b->rank : ah < bh);
+
+        qDebug() << "\n  # comp:" << *a << (result ? " < " : " >= ") << *b
+                 << "\n        : ah - " << ah << ", bh - " << bh << ", sweepPoint - " << *sweepPoint;
+
+        return result;
     }
 } typedef SegmentComparator;
 
@@ -63,8 +77,10 @@ public:
 
 private:
     QVector<QLineF> m_segments;
+    SegmentsSet *currentSegments;
 
-    Point* rightIntersection(Segment *s1, Segment *s2, const QPointF *p);
+    Point* rightIntersection(Segment *s1, Segment *s2, const QPointF *p, int rank);
+    void printCurrentSegments();
 };
 
 #endif // BENTLEYOTTMANN_H

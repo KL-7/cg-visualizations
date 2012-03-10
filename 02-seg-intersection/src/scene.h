@@ -16,6 +16,7 @@ public:
 public slots:
     void colorIntersections();
     void fastColorIntersections();
+    void regenerateSegments();
 
 private:
     QVector<QLineF> m_segments;
@@ -31,6 +32,8 @@ private:
     double rand(double max);
 
     void generateSegments(int count = SEGMENTS_COUNT);
+    void addsegments();
+    void redrawSegments();
 };
 
 #endif // SCENE_H

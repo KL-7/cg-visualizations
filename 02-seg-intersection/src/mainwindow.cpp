@@ -22,7 +22,8 @@ void MainWindow::setupScene() {
 
 void MainWindow::setupMenu() {
     QMenu *menu = new QMenu(tr("&File"), this);
-    menu->addAction(tr("&Color"), m_scene, SLOT(colorIntersections()));
-    menu->addAction(tr("F&ast Color"), m_scene, SLOT(fastColorIntersections()));
+    menu->addAction(tr("&Color"), m_scene, SLOT(colorIntersections()), tr("Ctrl+c"));
+    menu->addAction(tr("F&ast Color"), m_scene, SLOT(fastColorIntersections()), tr("Ctrl+f"));
+    menu->addAction(tr("&Regenerate"), m_scene, SLOT(regenerateSegments()), tr("Ctrl+r"));
     menuBar()->addMenu(menu);
 }
