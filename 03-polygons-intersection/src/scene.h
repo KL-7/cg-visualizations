@@ -13,18 +13,25 @@ public:
     explicit Scene(QObject *parent = 0);
 
 public slots:
-    void findIntersection();
+    void colorIntersection();
 
 private:
-    QVector<QLineF> m_segments;
-    PixmapItem *m_pixmap;
+    QGraphicsPolygonItem *polygon, *mask, *intersection;
 
     static const QRect DEFAULT_SCENE_RECT;
-    static const QColor SEGMENT_COLOR;
+    static const QColor POLYGON_COLOR;
+    static const QColor MASK_COLOR;
     static const QColor INTERSECTION_COLOR;
     static const QColor BACKGROUND_COLOR;
 
     void addPolygons();
-};
+    QPolygonF findIntersection(QPolygonF polygon, QPolygonF mask);
+    QPolygonF clip(QPolygonF polygon, QLineF segment);
+    bool inside(QPointF point, QLineF segment);
+    QPointF intersect(QLineF l1, QLineF l2);
+
+    QPolygonF getMask(int test);
+    QPolygonF getPolygon(int test);
+ };
 
 #endif // SCENE_H

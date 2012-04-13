@@ -22,6 +22,6 @@ void MainWindow::setupScene() {
 
 void MainWindow::setupMenu() {
     QMenu *menu = new QMenu(tr("&File"), this);
-    menu->addAction(tr("&Inersect"), m_scene, SLOT(findIntersection()), tr("Ctrl+c"));
+    menu->addAction(tr("&Inersect"), m_scene, SLOT(colorIntersection()), tr("Ctrl+c"));
     menuBar()->addMenu(menu);
 }
