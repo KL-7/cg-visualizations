@@ -1,5 +1,4 @@
 #include <QtGui>
-#include <QtDebug>
 
 #include "mainwindow.h"
 #include "scene.h"

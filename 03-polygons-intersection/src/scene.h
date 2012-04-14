@@ -3,9 +3,6 @@
 
 #include <QtGui/QGraphicsScene>
 
-class QuadraticTree;
-class PixmapItem;
-
 class Scene : public QGraphicsScene
 {
     Q_OBJECT
