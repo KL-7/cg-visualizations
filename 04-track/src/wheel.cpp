@@ -12,7 +12,7 @@ Wheel::Wheel(double radius) : m_radius(radius) {
 
     for (int i = 0; i < SPOKES_NUMBER; ++i) {
         QGraphicsLineItem *item = new QGraphicsLineItem(0, -m_radius, 0, m_radius, this);
-        item->rotate(2 * DEGREES_IN_PI * i / SPOKES_NUMBER);
+        item->rotate(2.0 * DEGREES_IN_PI * i / SPOKES_NUMBER);
         addToGroup(item);
     }
 }
