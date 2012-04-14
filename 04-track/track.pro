@@ -23,9 +23,11 @@ RCC_DIR = tmp
 SOURCES += src/main.cpp\
     src/mainwindow.cpp \
     src/scene.cpp \
-    src/wheel.cpp
+    src/wheel.cpp \
+    src/track.cpp
 
 HEADERS  += src/mainwindow.h \
     src/scene.h \
     src/wheel.h \
-    src/movableitemgroup.h
+    src/movableitemgroup.h \
+    src/track.h

@@ -6,7 +6,7 @@
 class Wheel : public MovableItemGroup
 {
 public:
-    Wheel(double radius = RADIUS);
+    Wheel(double radius);
 
     double radius() const { return m_radius; }
 
@@ -14,8 +14,8 @@ public:
 private:
     double m_radius;
 
-    static const double RADIUS;
     static const int SPOKES_NUMBER;
+    static const int DEGREES_IN_PI;
 };
 
 #endif // WHEEL_H
