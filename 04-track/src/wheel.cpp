@@ -15,8 +15,6 @@ Wheel::Wheel(double radius) : m_radius(radius) {
         item->rotate(2 * DEGREES_IN_PI * i / SPOKES_NUMBER);
         addToGroup(item);
     }
-
-    setTransformOriginPoint(m_radius, m_radius);
 }
 
 void Wheel::move(double step) {
