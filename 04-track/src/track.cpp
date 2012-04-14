@@ -53,17 +53,23 @@ void Track::movePoint(QGraphicsItem *point, double step) {
 }
 
 QPointF Track::movePoint(QPointF point, double step) {
+    return normalizePoint(shiftPiont(point, step));
+}
+
+QPointF Track::shiftPiont(QPointF point, double step) {
     if (-m_width / 2 <= point.x() && point.x() <= m_width / 2) {
-        if (point.y() >= 0) {
-            point.rx() -= step;
-            point.setY(m_radius);
-        } else {
-            point.rx() += step;
-            point.setY(-m_radius);
-        }
+        return point + QPointF(point.y() > 0 ? -step : step, 0);
     } else {
-        QPointF pivot(point.x() > 0 ? m_width / 2 : -m_width / 2, 0);
-        point = rotatePoint(pivot, point, step / m_radius);
+        return rotatePoint(QPointF(point.x() > 0 ? m_width / 2 : -m_width / 2, 0), point, step / m_radius);
+    }
+}
+
+QPointF Track::normalizePoint(QPointF point) {
+    if (-m_width / 2 <= point.x() && point.x() <= m_width / 2) {
+        point.setY(point.y() > 0 ? m_radius : -m_radius);
+    } else {
+        point.setY(qMax(point.y(), -m_radius));
+        point.setY(qMin(point.y(), m_radius));
     }
 
     return point;

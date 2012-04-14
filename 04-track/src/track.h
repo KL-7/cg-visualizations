@@ -23,8 +23,11 @@ private:
 
     void addPoints();
     void addPoint(QPointF point);
-    QPointF movePoint(QPointF point, double step);
+
     void movePoint(QGraphicsItem *point, double step);
+    QPointF movePoint(QPointF point, double step);
+    QPointF shiftPiont(QPointF point, double step);
+    QPointF normalizePoint(QPointF point);
     QPointF rotatePoint(QPointF pivot, QPointF point, double angle);
 };
 

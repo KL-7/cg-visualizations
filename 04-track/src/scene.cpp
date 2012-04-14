@@ -9,7 +9,7 @@ const QRect Scene::DEFAULT_SCENE_RECT = QRect(0, 0, 900, 600);
 const QColor Scene::BACKGROUND_COLOR = QColor("#DAEDDC");
 
 const QPointF Scene::INITIAL_POS = QPointF(300, 400);
-const int Scene::TRACK_STEP = 4;
+const int Scene::TRACK_STEP = 3;
 const double Scene::TRACK_WIDTH = 300;
 const double Scene::TRACK_RADIUS = 50;
 
