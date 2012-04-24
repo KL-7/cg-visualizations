@@ -11,13 +11,15 @@ public:
     Projection();
 
     void render(QGraphicsScene *scene);
-
-    QMatrix4x4 transformMatrix();
-    QVector3D transformPoint3D(QVector3D p, QMatrix4x4);
-    QPointF transformPoint(QVector3D p, QMatrix4x4);
+    void move(double horizontal, double vertical);
+    void rotate(double horizontal, double vertical);
+    void zoom(double factor);
 
 private:
-    QVector3D vrpVector;
+    static const double MOVE_SCALE;
+    static const double ROTATE_SCALE;
+    static const double ZOOM_SCALE;
+
     QVector3D cop;
 
     QVector3D vpn;
@@ -30,12 +32,17 @@ private:
     double viewWindowWidth;
     double viewWindowHeight;
 
-    QVector3D vrp() { return cop + vrpDistance * vrpVector.normalized(); }
+    QVector3D vrp() { return cop + vrpDistance * vpn.normalized(); }
     QPointF uvMin() { return QPointF(-viewWindowWidth / 2, -viewWindowHeight / 2); }
     QPointF uvMax() { return QPointF(viewWindowWidth / 2, viewWindowHeight / 2); }
 
-    QMatrix4x4 shiftMatrix(double dx, double dy, double dz);
     QMatrix4x4 scaleMatrix(double sx, double sy, double sz);
+    QMatrix4x4 shiftMatrix(double dx, double dy, double dz);
+    QMatrix4x4 shiftMatrix(QVector3D v);
+
+    QMatrix4x4 transformMatrix();
+    QVector3D transformPoint3D(QVector3D p, QMatrix4x4);
+    QPointF transformPoint(QVector3D p, QMatrix4x4);
 
     QList<Segment3D> unitCube();
     QList<Segment3D> axes();

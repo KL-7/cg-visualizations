@@ -3,7 +3,7 @@
 
 #include <QtGui/QGraphicsScene>
 
-class PixmapItem;
+class Projection;
 
 class Scene : public QGraphicsScene
 {
@@ -11,11 +11,14 @@ class Scene : public QGraphicsScene
 public:
     explicit Scene(QObject *parent = 0);
 
+protected:
+    void keyPressEvent(QKeyEvent *event);
+
 private:
     static const QRect DEFAULT_SCENE_RECT;
     static const QColor BACKGROUND_COLOR;
 
-    PixmapItem *m_pixmap;
+    Projection *projection;
 };
 
 #endif // SCENE_H

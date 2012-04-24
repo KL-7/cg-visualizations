@@ -11,19 +11,48 @@ Scene::Scene(QObject *parent) : QGraphicsScene(parent) {
     setBackgroundBrush(BACKGROUND_COLOR);
     setSceneRect(DEFAULT_SCENE_RECT);
 
-    Projection p;
+    projection = new Projection();
 
-    p.render(this);
+    projection->render(this);
+}
 
-//    addItem(new QGraphicsLineItem(QLineF(300, 300, 400, 400)));
+void Scene::keyPressEvent(QKeyEvent *event) {
+    switch (event->key()) {
 
-//    QMatrix4x4 m = p.transformMatrix();
+    case Qt::Key_A:
+        projection->move(-1, 0);
+        break;
+    case Qt::Key_D:
+        projection->move(1, 0);
+        break;
+    case Qt::Key_S:
+        projection->move(0, -1);
+        break;
+    case Qt::Key_W:
+        projection->move(0, 1);
+        break;
 
-//    qDebug() << p.transformPoint3D(QVector3D(-3, 1, 1), m);
-//    qDebug() << p.transformPoint3D(QVector3D(2, 1, 1), m);
+    case Qt::Key_Equal:
+        projection->zoom(1);
+        break;
+    case Qt::Key_Minus:
+        projection->zoom(-1);
+        break;
 
-//    qDebug() << p.transformPoint3D(QVector3D(-2, 0, 0), m);
-//    qDebug() << p.transformPoint3D(QVector3D(-1, -1, -1), m);
-//    qDebug() << p.transformPoint3D(QVector3D(0, -2, -2), m);
-//    qDebug() << p.transformPoint3D(QVector3D(2, -4, -4), m);
+    case Qt::Key_Left:
+        projection->rotate(-1, 0);
+        break;
+    case Qt::Key_Right:
+        projection->rotate(1, 0);
+        break;
+    case Qt::Key_Down:
+        projection->rotate(0, -1);
+        break;
+    case Qt::Key_Up:
+        projection->rotate(0, 1);
+        break;
+
+    }
+
+    projection->render(this);
 }
