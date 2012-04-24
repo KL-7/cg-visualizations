@@ -38,7 +38,9 @@ private:
     QMatrix4x4 scaleMatrix(double sx, double sy, double sz);
 
     QList<Segment3D> unitCube();
+    QList<Segment3D> axes();
     Segment3D segment3D(double x1, double y1, double z1, double x2, double y2, double z2);
+    void renderSegments(QGraphicsScene *scene, const QList<Segment3D> &segments, const QMatrix4x4 &matrix);
 };
 
 #endif // PROJECTION_H

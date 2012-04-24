@@ -18,17 +18,19 @@ Projection::Projection() {
 }
 
 void Projection::render(QGraphicsScene *scene) {
-    QMatrix4x4 matrix = transformMatrix();
-
-    matrix *= scaleMatrix(scene->width(), -scene->height(), 1) * shiftMatrix(0, scene->height(), 0);
-
-    QList<Segment3D> segments = unitCube();
+    QMatrix4x4 matrix = transformMatrix()
+            * scaleMatrix(scene->width(), -scene->height(), 1)
+            * shiftMatrix(0, scene->height(), 0);
 
     scene->clear();
 
+    renderSegments(scene, unitCube(), matrix);
+    renderSegments(scene, axes(), matrix);
+}
+
+void Projection::renderSegments(QGraphicsScene *scene, const QList<Segment3D> &segments, const QMatrix4x4 &matrix) {
     foreach (Segment3D segment, segments) {
         QLineF line(transformPoint(segment.first, matrix), transformPoint(segment.second, matrix));
-//        qDebug() << line;
         scene->addItem(new QGraphicsLineItem(line));
     }
 }
@@ -164,6 +166,18 @@ QList<Segment3D> Projection::unitCube() {
         << segment3D(0, 1, 0, 0, 1, 1)
     ;
 
+
+    return segments;
+}
+
+QList<Segment3D> Projection::axes() {
+    QList<Segment3D> segments;
+
+    segments
+        << segment3D(0, 0, 0, 100,   0,   0)
+        << segment3D(0, 0, 0,   0, 100,   0)
+        << segment3D(0, 0, 0,   0,   0, 100)
+    ;
 
     return segments;
 }
