@@ -23,14 +23,8 @@ RCC_DIR = tmp
 SOURCES += src/main.cpp\
     src/mainwindow.cpp \
     src/scene.cpp \
-    src/pixmapitem.cpp \
-    src/projection.cpp \
-    src/point3d.cpp \
-    src/vector3d.cpp
+    src/projection.cpp
 
 HEADERS  += src/mainwindow.h \
     src/scene.h \
-    src/pixmapitem.h \
-    src/projection.h \
-    src/point3d.h \
-    src/vector3d.h
+    src/projection.h

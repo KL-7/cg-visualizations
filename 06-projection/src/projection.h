@@ -3,18 +3,18 @@
 
 #include <QtGui>
 
-#include "point3d.h"
-#include "vector3d.h"
+typedef QPair<QVector3D, QVector3D> Segment3D;
 
 class Projection
 {
 public:
     Projection();
 
-    QPixmap render(QSize size);
+    void render(QGraphicsScene *scene);
 
-    QVector3D transformPoint(QVector3D p, QMatrix4x4);
     QMatrix4x4 transformMatrix();
+    QVector3D transformPoint3D(QVector3D p, QMatrix4x4);
+    QPointF transformPoint(QVector3D p, QMatrix4x4);
 
 private:
     QVector3D vrp;
@@ -28,6 +28,12 @@ private:
 
     double ff;
     double bb;
+
+    QMatrix4x4 shiftMatrix(double dx, double dy, double dz);
+    QMatrix4x4 scaleMatrix(double sx, double sy, double sz);
+
+    QList<Segment3D> unitCube();
+    Segment3D segment3D(double x1, double y1, double z1, double x2, double y2, double z2);
 };
 
 #endif // PROJECTION_H

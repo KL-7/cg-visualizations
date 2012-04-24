@@ -2,7 +2,6 @@
 #include <QtDebug>
 
 #include "scene.h"
-#include "pixmapitem.h"
 #include "projection.h"
 
 const QRect Scene::DEFAULT_SCENE_RECT = QRect(0, 0, 900, 600);
@@ -12,16 +11,19 @@ Scene::Scene(QObject *parent) : QGraphicsScene(parent) {
     setBackgroundBrush(BACKGROUND_COLOR);
     setSceneRect(DEFAULT_SCENE_RECT);
 
-    m_pixmap = new PixmapItem(sceneRect().size().toSize(), this);
-
     Projection p;
-    QMatrix4x4 m = p.transformMatrix();
 
-    qDebug() << p.transformPoint(QVector3D(-3, 1, 1), m);
-    qDebug() << p.transformPoint(QVector3D(3, 1, 1), m);
-    qDebug() << p.transformPoint(QVector3D(-3, 2, 1), m);
+    p.render(this);
 
-    qDebug() << p.transformPoint(QVector3D(-3, 1, 2), m);
-    qDebug() << p.transformPoint(QVector3D(-3, 2, 1), m);
-    qDebug() << p.transformPoint(QVector3D(-4, 1, 1), m);
+//    addItem(new QGraphicsLineItem(QLineF(300, 300, 400, 400)));
+
+//    QMatrix4x4 m = p.transformMatrix();
+
+//    qDebug() << p.transformPoint3D(QVector3D(-3, 1, 1), m);
+//    qDebug() << p.transformPoint3D(QVector3D(2, 1, 1), m);
+
+//    qDebug() << p.transformPoint3D(QVector3D(-2, 0, 0), m);
+//    qDebug() << p.transformPoint3D(QVector3D(-1, -1, -1), m);
+//    qDebug() << p.transformPoint3D(QVector3D(0, -2, -2), m);
+//    qDebug() << p.transformPoint3D(QVector3D(2, -4, -4), m);
 }
