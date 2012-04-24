@@ -17,17 +17,22 @@ public:
     QPointF transformPoint(QVector3D p, QMatrix4x4);
 
 private:
-    QVector3D vrp;
+    QVector3D vrpVector;
     QVector3D cop;
 
     QVector3D vpn;
     QVector3D vup;
 
-    QPointF uvMin;
-    QPointF uvMax;
-
     double ff;
     double bb;
+
+    double vrpDistance;
+    double viewWindowWidth;
+    double viewWindowHeight;
+
+    QVector3D vrp() { return cop + vrpDistance * vrpVector.normalized(); }
+    QPointF uvMin() { return QPointF(-viewWindowWidth / 2, -viewWindowHeight / 2); }
+    QPointF uvMax() { return QPointF(viewWindowWidth / 2, viewWindowHeight / 2); }
 
     QMatrix4x4 shiftMatrix(double dx, double dy, double dz);
     QMatrix4x4 scaleMatrix(double sx, double sy, double sz);

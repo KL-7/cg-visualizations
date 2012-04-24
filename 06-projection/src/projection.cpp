@@ -2,23 +2,25 @@
 #include "projection.h"
 
 Projection::Projection() {
-    vrp = QVector3D(-1, 0.5, 0.5); // view reference point
-    cop = QVector3D(-5, 0.5, 0.5); // central of projection
+    cop = QVector3D(-5, 0.5, 0.5);  // central of projection
+
+    vrpDistance = 4; // view reference point distance
+    vrpVector = QVector3D(1, 0, 0); // view reference point direction
 
     vpn = QVector3D(1, 0, 0); // view plane normal
     vup = QVector3D(0, 1, 0); // view-up vector
 
-    uvMin = QPointF(-2, -2);
-    uvMax = QPointF(2, 2);
+    viewWindowWidth  = 9;
+    viewWindowHeight = 6;
 
     ff = -1;
-    bb = 3;
+    bb = 10;
 }
 
 void Projection::render(QGraphicsScene *scene) {
     QMatrix4x4 matrix = transformMatrix();
 
-    matrix *= scaleMatrix(scene->width(), scene->height(), 1);
+    matrix *= scaleMatrix(scene->width(), -scene->height(), 1) * shiftMatrix(0, scene->height(), 0);
 
     QList<Segment3D> segments = unitCube();
 
@@ -61,10 +63,10 @@ QMatrix4x4 Projection::transformMatrix() {
 //    qDebug() << "* T(-COP) * R * T_pl: " << matrix;
 
     // vrp1 = vrp * T(-COP) * R * T_pl
-    QVector3D vrp1 = transformPoint3D(vrp, matrix);
+    QVector3D vrp1 = transformPoint3D(vrp(), matrix);
 
-    double wcx = vrp1.x() + (uvMin.x() + uvMax.x()) / 2;
-    double wcy = vrp1.y() + (uvMin.y() + uvMax.y()) / 2;
+    double wcx = vrp1.x() + (uvMin().x() + uvMax().x()) / 2;
+    double wcy = vrp1.y() + (uvMin().y() + uvMax().y()) / 2;
     double wcz = vrp1.z();
 
     double a = -wcx / wcz;
@@ -81,8 +83,8 @@ QMatrix4x4 Projection::transformMatrix() {
 //    qDebug() << "* T(-COP) * R * T_pl * Sh(a, b): " << matrix;
 
     double sz = 1.0 / (vrp1.z() + bb);
-    double sx = 2 * vrp1.z() * sz / (uvMax.x() - uvMin.x());
-    double sy = 2 * vrp1.z() * sz / (uvMax.y() - uvMin.y());
+    double sx = 2 * vrp1.z() * sz / (uvMax().x() - uvMin().x());
+    double sy = 2 * vrp1.z() * sz / (uvMax().y() - uvMin().y());
 
     // matrx = T(-COP) * R * T_pl * Sh(a, b) * S_c
     matrix *= scaleMatrix(sx, sy, sz);
