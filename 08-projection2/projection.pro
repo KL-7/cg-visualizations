@@ -23,8 +23,10 @@ RCC_DIR = tmp
 SOURCES += src/main.cpp\
     src/mainwindow.cpp \
     src/scene.cpp \
-    src/projection.cpp
+    src/projection.cpp \
+    src/intersection.cpp
 
 HEADERS  += src/mainwindow.h \
     src/scene.h \
-    src/projection.h
+    src/projection.h \
+    src/intersection.h
