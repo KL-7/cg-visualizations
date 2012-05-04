@@ -6,12 +6,12 @@ const double Projection::ROTATE_SCALE = 10e-1;
 const double Projection::ZOOM_SCALE = 10e-2;
 
 Projection::Projection() {
-    cop = QVector3D(-5, 0.5, 0.5);  // central of projection
+    cop = Point3D(-5, 0.5, 0.5);  // central of projection
 
     vrpDistance = 4; // view reference point distance
 
-    vpn = QVector3D(1, 0, 0); // view plane normal
-    vup = QVector3D(0, 1, 0); // view-up vector
+    vpn = Point3D(1, 0, 0); // view plane normal
+    vup = Point3D(0, 1, 0); // view-up vector
 
     viewWindowWidth  = 9;
     viewWindowHeight = 6;
@@ -27,16 +27,23 @@ void Projection::render(QGraphicsScene *scene) {
 
     scene->clear();
 
-    renderSegments(scene, unitCube(), matrix);
+    renderFigure(scene, figure(), matrix);
+//    renderSegments(scene, unitCube(), matrix);
 //    renderSegments(scene, axes(), matrix);
 }
 
 void Projection::renderSegments(QGraphicsScene *scene, const QList<Segment3D> &segments, const QMatrix4x4 &matrix) {
     foreach (Segment3D segment, segments) {
-        QVector3D p1 = transformPoint3D(segment.first, matrix);
-        QVector3D p2 = transformPoint3D(segment.second, matrix);
+        Point3D p1 = transformPoint3D(segment.first, matrix);
+        Point3D p2 = transformPoint3D(segment.second, matrix);
 
         scene->addItem(new QGraphicsLineItem(QLineF(p1.toPointF(), p2.toPointF())));
+    }
+}
+
+void Projection::renderFigure(QGraphicsScene *scene, const QList<Facet3D> &facets, const QMatrix4x4 &matrix) {
+    foreach (Facet3D facet, facets) {
+        scene->addPolygon(transformFacet3D(facet, matrix).toPolygonF());
     }
 }
 
@@ -46,9 +53,9 @@ QMatrix4x4 Projection::transformMatrix() {
     // matrx = T(-COP)
     matrix *= shiftMatrix(-cop);
 
-    QVector3D rz = -vpn.normalized();
-    QVector3D rx = QVector3D::crossProduct(vpn, vup).normalized();
-    QVector3D ry = QVector3D::crossProduct(rz, rx); // (rz x rx), NOT (rx x rz)!
+    Point3D rz = -vpn.normalized();
+    Point3D rx = Point3D::crossProduct(vpn, vup).normalized();
+    Point3D ry = Point3D::crossProduct(rz, rx); // (rz x rx), NOT (rx x rz)!
 
     QMatrix4x4 r;
     r.setColumn(0, rx);
@@ -62,7 +69,7 @@ QMatrix4x4 Projection::transformMatrix() {
     matrix *= scaleMatrix(1, 1, -1);
 
     // vrp1 = vrp * T(-COP) * R * T_pl
-    QVector3D vrp1 = transformPoint3D(vrp(), matrix);
+    Point3D vrp1 = transformPoint3D(vrp(), matrix);
 
     double wcx = vrp1.x() + (uvMin().x() + uvMax().x()) / 2;
     double wcy = vrp1.y() + (uvMin().y() + uvMax().y()) / 2;
@@ -105,12 +112,22 @@ QMatrix4x4 Projection::transformMatrix() {
     return matrix;
 }
 
-QVector3D Projection::transformPoint3D(QVector3D p, QMatrix4x4 m) {
+Point3D Projection::transformPoint3D(Point3D p, QMatrix4x4 m) {
     return (QVector4D(p.x(), p.y(), p.z(), 1) * m).toVector3DAffine();
 }
 
-QPointF Projection::transformPoint(QVector3D p, QMatrix4x4 m) {
+QPointF Projection::transformPoint(Point3D p, QMatrix4x4 m) {
     return transformPoint3D(p, m).toPointF();
+}
+
+Facet3D Projection::transformFacet3D(Facet3D facet, QMatrix4x4 m) {
+    QList<Point3D> points;
+
+    foreach (Point3D vertex, facet.vertices()) {
+        points << transformPoint3D(vertex, m);
+    }
+
+    return Facet3D(points);
 }
 
 QMatrix4x4 Projection::shiftMatrix(double dx, double dy, double dz) {
@@ -131,7 +148,7 @@ QMatrix4x4 Projection::scaleMatrix(double sx, double sy, double sz) {
     );
 }
 
-QMatrix4x4 Projection::shiftMatrix(QVector3D v) {
+QMatrix4x4 Projection::shiftMatrix(Point3D v) {
     return shiftMatrix(v.x(), v.y(), v.z());
 }
 
@@ -159,6 +176,58 @@ QList<Segment3D> Projection::unitCube() {
     return segments;
 }
 
+QList<Facet3D> Projection::figure() {
+    QList<Facet3D> facets;
+    QList<Point3D> points;
+
+    points
+        << Point3D(0, 0, 0)
+        << Point3D(1, 0, 0)
+        << Point3D(1, 0, 1)
+        << Point3D(0, 0, 1)
+    ;
+
+    facets << Facet3D(points);
+
+    points.clear();
+    points
+        << Point3D(0,   0, 0)
+        << Point3D(1,   0, 0)
+        << Point3D(0.5, 1, 0.5)
+    ;
+
+    facets << Facet3D(points);
+
+    points.clear();
+    points
+        << Point3D(1,   0, 0)
+        << Point3D(1,   0, 1)
+        << Point3D(0.5, 1, 0.5)
+    ;
+
+    facets << Facet3D(points);
+
+    points.clear();
+    points
+        << Point3D(1,   0, 1)
+        << Point3D(0,   0, 1)
+        << Point3D(0.5, 1, 0.5)
+    ;
+
+    facets << Facet3D(points);
+
+    points.clear();
+    points
+        << Point3D(0,   0, 1)
+        << Point3D(0,   0, 0)
+        << Point3D(0.5, 1, 0.5)
+    ;
+
+    facets << Facet3D(points);
+
+    return facets;
+}
+
 QList<Segment3D> Projection::axes() {
     QList<Segment3D> segments;
 
@@ -172,16 +241,16 @@ QList<Segment3D> Projection::axes() {
 }
 
 Segment3D Projection::segment3D(double x1, double y1, double z1, double x2, double y2, double z2) {
-    return Segment3D(QVector3D(x1, y1, z1), QVector3D(x2, y2, z2));
+    return Segment3D(Point3D(x1, y1, z1), Point3D(x2, y2, z2));
 }
 
 void Projection::move(double horizontal, double vertical) {
-    cop = transformPoint3D(cop, shiftMatrix(MOVE_SCALE * (horizontal * QVector3D::crossProduct(vpn, vup) + vertical * vpn)));
+    cop = transformPoint3D(cop, shiftMatrix(MOVE_SCALE * (horizontal * Point3D::crossProduct(vpn, vup) + vertical * vpn)));
 }
 
 void Projection::rotate(double horizontal, double vertical) {
-    QVector3D horizontalAxis = QVector3D::crossProduct(vpn, vup);
-    QVector3D verticalAxis = QVector3D::crossProduct(horizontalAxis, vpn);
+    Point3D horizontalAxis = Point3D::crossProduct(vpn, vup);
+    Point3D verticalAxis = Point3D::crossProduct(horizontalAxis, vpn);
 
     QMatrix4x4 horizontalRotation;
     horizontalRotation.rotate(ROTATE_SCALE * horizontal, verticalAxis);

@@ -24,9 +24,11 @@ SOURCES += src/main.cpp\
     src/mainwindow.cpp \
     src/scene.cpp \
     src/projection.cpp \
-    src/intersection.cpp
+    src/intersection.cpp \
+    src/facet3d.cpp
 
 HEADERS  += src/mainwindow.h \
     src/scene.h \
     src/projection.h \
-    src/intersection.h
+    src/intersection.h \
+    src/facet3d.h
