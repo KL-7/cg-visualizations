@@ -11,9 +11,9 @@ Scene::Scene(QObject *parent) : QGraphicsScene(parent) {
     setBackgroundBrush(BACKGROUND_COLOR);
     setSceneRect(DEFAULT_SCENE_RECT);
 
-    projection = new Projection();
+    projection = new Projection(this);
 
-    projection->render(this);
+    projection->render();
 }
 
 void Scene::keyPressEvent(QKeyEvent *event) {
@@ -54,5 +54,5 @@ void Scene::keyPressEvent(QKeyEvent *event) {
 
     }
 
-    projection->render(this);
+    projection->render();
 }

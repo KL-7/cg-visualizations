@@ -8,9 +8,9 @@
 class Projection
 {
 public:
-    Projection();
+    Projection(QGraphicsScene *scene);
 
-    void render(QGraphicsScene *scene);
+    void render();
     void move(double horizontal, double vertical);
     void rotate(double horizontal, double vertical);
     void zoom(double factor);
@@ -19,6 +19,12 @@ private:
     static const double MOVE_SCALE;
     static const double ROTATE_SCALE;
     static const double ZOOM_SCALE;
+    static const double PIXELIZATION_LIMIT;
+
+    enum FacetType { OUTER = 1, ENCLOSING, INTERSECTING, INNER };
+
+    QGraphicsScene *m_scene;
+    QList<Facet3D*> m_figure;
 
     Point3D cop;
 
@@ -43,14 +49,17 @@ private:
     QMatrix4x4 transformMatrix();
     Point3D transformPoint3D(Point3D p, QMatrix4x4);
     QPointF transformPoint(Point3D p, QMatrix4x4);
-    Facet3D transformFacet3D(Facet3D facet, QMatrix4x4 m);
+    Facet3D* transformFacet3D(Facet3D *facet, QMatrix4x4 m);
 
-    QList<Facet3D> figure();
-    QList<Segment3D> unitCube();
-    QList<Segment3D> axes();
-    Segment3D segment3D(double x1, double y1, double z1, double x2, double y2, double z2);
-    void renderFigure(QGraphicsScene *scene, const QList<Facet3D> &facets, const QMatrix4x4 &matrix);
-    void renderSegments(QGraphicsScene *scene, const QList<Segment3D> &segments, const QMatrix4x4 &matrix);
+    void warnock(const QRectF &rect, QList<Facet3D*> enclosingFacets, QList<Facet3D*> otherFacets);
+
+    void setupFigure();
+    void fill(QPolygonF polygon, QColor color);
+    FacetType facetType(Facet3D *facet, const QRectF &rect);
+    QList<Point3D> framePoints(Facet3D *facet, const QRectF &frame);
+    double determinant(Point3D p1, Point3D p2, Point3D p3);
+
+    void renderFigure(const QMatrix4x4 &matrix);
 };
 
 #endif // PROJECTION_H

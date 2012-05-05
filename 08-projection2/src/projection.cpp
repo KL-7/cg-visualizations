@@ -1,12 +1,15 @@
 #include <QtDebug>
+
 #include "projection.h"
+#include "intersection.h"
 
 const double Projection::MOVE_SCALE = 10e-2;
 const double Projection::ROTATE_SCALE = 10e-1;
 const double Projection::ZOOM_SCALE = 10e-2;
+const double Projection::PIXELIZATION_LIMIT = 1;
 
-Projection::Projection() {
-    cop = Point3D(-5, 0.5, 0.5);  // central of projection
+Projection::Projection(QGraphicsScene *scene) : m_scene(scene) {
+    cop = Point3D(-3, 0.5, 0.5);  // center of projection
 
     vrpDistance = 4; // view reference point distance
 
@@ -18,34 +21,185 @@ Projection::Projection() {
 
     ff = -1;
     bb = 100;
+
+    setupFigure();
 }
 
-void Projection::render(QGraphicsScene *scene) {
+void Projection::render() {
     QMatrix4x4 matrix = transformMatrix()
-            * scaleMatrix(scene->width(), -scene->height(), 1)
-            * shiftMatrix(0, scene->height(), 0);
+            * scaleMatrix(m_scene->width(), -m_scene->height(), 1)
+            * shiftMatrix(0, m_scene->height(), 0);
 
-    scene->clear();
-
-    renderFigure(scene, figure(), matrix);
-//    renderSegments(scene, unitCube(), matrix);
-//    renderSegments(scene, axes(), matrix);
+    m_scene->clear();
+    renderFigure(matrix);
 }
 
-void Projection::renderSegments(QGraphicsScene *scene, const QList<Segment3D> &segments, const QMatrix4x4 &matrix) {
-    foreach (Segment3D segment, segments) {
-        Point3D p1 = transformPoint3D(segment.first, matrix);
-        Point3D p2 = transformPoint3D(segment.second, matrix);
+void Projection::renderFigure(const QMatrix4x4 &matrix) {
+    foreach (Facet3D *facet, m_figure) {
+        m_scene->addPolygon(transformFacet3D(facet, matrix)->toPolygonF());
+    }
 
-        scene->addItem(new QGraphicsLineItem(QLineF(p1.toPointF(), p2.toPointF())));
+    QList<Facet3D*> transformedFigure;
+
+    foreach (Facet3D *facet, m_figure) {
+        transformedFigure << transformFacet3D(facet, matrix);
+    }
+
+    warnock(m_scene->sceneRect(), QList<Facet3D*>(), transformedFigure);
+}
+
+void Projection::warnock(const QRectF &rect, QList<Facet3D*> enclosingFacets, QList<Facet3D*> otherFacets) {
+    // TODO: handle single pixel.
+    if (rect.width() * rect.height() <= PIXELIZATION_LIMIT) return;
+
+    QList<Facet3D*> intersectingFacets, innerFacets;
+
+    foreach (Facet3D *facet, otherFacets) {
+        switch (facetType(facet, rect)) {
+        case ENCLOSING:
+            enclosingFacets << facet;
+            break;
+        case INTERSECTING:
+            intersectingFacets << facet;
+            break;
+        case INNER:
+            innerFacets << facet;
+            break;
+        }
+    }
+
+    // 1. No intersection - background color.
+    if (enclosingFacets.empty() && intersectingFacets.empty() && innerFacets.empty()) return;
+
+    // 2. Single inner or intersecting facet.
+    if (enclosingFacets.empty() && (intersectingFacets.size() + innerFacets.size() == 1)) {
+        if (intersectingFacets.size() == 1) {
+            Facet3D *facet = intersectingFacets.first();
+            fill(Intersection::calculate(QPolygonF(rect), facet->toPolygonF()), facet->color());
+        } else /*if (innerFacets.size() == 1)*/ {
+            Facet3D *facet = innerFacets.first();
+            fill(facet->toPolygonF(), facet->color());
+        }
+        return;
+    }
+
+    // 3. Single enclosing facet.
+    if (enclosingFacets.size() == 1 && intersectingFacets.empty() && innerFacets.empty()) {
+        fill(QPolygonF(rect), enclosingFacets.first()->color());
+        return;
+    }
+
+    // 4. At least one enclosing facet and several inner and intersecting facets.
+    if (enclosingFacets.size() >= 1/* && (intersectingFacets.size() + innerFacets.size() > 1)*/) {
+        QList<Point3D> bestPoints;
+        Facet3D *bestFacet = 0;
+
+        foreach (Facet3D *facet, enclosingFacets + intersectingFacets + innerFacets) {
+            QList<Point3D> points = framePoints(facet, rect);
+
+            bool better = true;
+
+            if (!bestPoints.empty()) {
+                for (int i = 0; i < 4; ++i) {
+                    if (points[i].z() > bestPoints[i].z()) {
+                        better = false;
+                        break;
+                    }
+                }
+            }
+
+            if (better) {
+                bestPoints = points;
+                bestFacet = facet;
+            }
+
+            foreach (Facet3D *facet, intersectingFacets + innerFacets) {
+                if (facet == bestFacet) {
+                    bestFacet = 0;
+                    break;
+                }
+            }
+        }
+
+        if (bestFacet) {
+            fill(Intersection::calculate(QPolygonF(rect), bestFacet->toPolygonF()), bestFacet->color());
+            return;
+        }
+    }
+
+    QRectF r(rect.left(), rect.top(), rect.width() / 2, rect.height() / 2);
+    QList<Facet3D*> facets = intersectingFacets + innerFacets;
+
+    for (int i = 0; i < 4; ++i) {
+        warnock(r.translated((i % 2) * r.width(), (i / 2) * r.height()), enclosingFacets, facets);
     }
 }
 
-void Projection::renderFigure(QGraphicsScene *scene, const QList<Facet3D> &facets, const QMatrix4x4 &matrix) {
-    foreach (Facet3D facet, facets) {
-        scene->addPolygon(transformFacet3D(facet, matrix).toPolygonF());
+QList<Point3D> Projection::framePoints(Facet3D *facet, const QRectF &frame) {
+    Point3D p1 = facet->vertices()[0],
+            p2 = facet->vertices()[1],
+            p3 = facet->vertices()[2];
+
+    double D = p1.x() * (p2.y() * p3.z() - p2.z() * p3.y())
+             - p1.y() * (p2.x() * p3.z() - p2.z() * p3.x())
+             + p1.z() * (p2.x() * p3.y() - p2.y() * p3.x());
+
+    double A =      1 * (p2.y() * p3.z() - p2.z() * p3.y())
+             - p1.y() * (     1 * p3.z() - p2.z() *      1)
+             + p1.z() * (     1 * p3.y() - p2.y() *      1);
+
+    double B = p1.x() * (     1 * p3.z() - p2.z() *      1)
+             -      1 * (p2.x() * p3.z() - p2.z() * p3.x())
+             + p1.z() * (p2.x() *      1 -      1 * p3.x());
+
+    double C = p1.x() * (p2.y() *      1 -      1 * p3.y())
+             - p1.y() * (p2.x() *      1 -      1 * p3.x())
+             +      1 * (p2.x() * p3.y() - p2.y() * p3.x());
+
+    double a = -A/D, b = -B/D, c = -C/D;
+
+    QList<Point3D> points;
+
+    foreach (QPointF p, QPolygonF(frame).toList()) {
+        points << Point3D(p.x(), p.y(), (a * p.x() + b * p.y() + 1) / -c);
     }
+
+    return points;
 }
+
+double Projection::determinant(Point3D p1, Point3D p2, Point3D p3) {
+    return p1.x() * (p2.y() * p3.z() - p2.z() * p3.y())
+         - p1.y() * (p2.x() * p3.z() - p2.z() * p3.x())
+         + p1.z() * (p2.x() * p3.y() - p2.y() * p3.x());
+}
+
+Projection::FacetType Projection::facetType(Facet3D *facet, const QRectF &rect) {
+    QPolygonF polygon = facet->toPolygonF();
+
+    bool inside = true;
+    foreach (QPointF p, QPolygonF(rect).toList()) {
+        if (!polygon.containsPoint(p, Qt::OddEvenFill)) {
+            inside = false;
+            break;
+        }
+    }
+    if (inside) return ENCLOSING;
+
+    QPolygonF intersection = Intersection::calculate(rect, polygon);
+
+    if (intersection.empty()) {
+        return OUTER;
+    } else if (intersection == polygon) {
+        return INNER;
+    }
+
+    return INTERSECTING;
+}
+
+void Projection::fill(QPolygonF polygon, QColor color) {
+    m_scene->addPolygon(polygon, color, color);
+}
+
 
 QMatrix4x4 Projection::transformMatrix() {
     QMatrix4x4 matrix;
@@ -120,14 +274,14 @@ QPointF Projection::transformPoint(Point3D p, QMatrix4x4 m) {
     return transformPoint3D(p, m).toPointF();
 }
 
-Facet3D Projection::transformFacet3D(Facet3D facet, QMatrix4x4 m) {
+Facet3D* Projection::transformFacet3D(Facet3D *facet, QMatrix4x4 m) {
     QList<Point3D> points;
 
-    foreach (Point3D vertex, facet.vertices()) {
+    foreach (Point3D vertex, facet->vertices()) {
         points << transformPoint3D(vertex, m);
     }
 
-    return Facet3D(points);
+    return new Facet3D(points, facet->id(), facet->color());
 }
 
 QMatrix4x4 Projection::shiftMatrix(double dx, double dy, double dz) {
@@ -152,32 +306,7 @@ QMatrix4x4 Projection::shiftMatrix(Point3D v) {
     return shiftMatrix(v.x(), v.y(), v.z());
 }
 
-QList<Segment3D> Projection::unitCube() {
-    QList<Segment3D> segments;
-
-    segments
-        << segment3D(0, 0, 0, 1, 0, 0)
-        << segment3D(1, 0, 0, 1, 1, 0)
-        << segment3D(1, 1, 0, 0, 1, 0)
-        << segment3D(0, 1, 0, 0, 0, 0)
-
-        << segment3D(0, 0, 1, 1, 0, 1)
-        << segment3D(1, 0, 1, 1, 1, 1)
-        << segment3D(1, 1, 1, 0, 1, 1)
-        << segment3D(0, 1, 1, 0, 0, 1)
-
-        << segment3D(0, 0, 0, 0, 0, 1)
-        << segment3D(1, 0, 0, 1, 0, 1)
-        << segment3D(1, 1, 0, 1, 1, 1)
-        << segment3D(0, 1, 0, 0, 1, 1)
-    ;
-
-
-    return segments;
-}
-
-QList<Facet3D> Projection::figure() {
-    QList<Facet3D> facets;
+void Projection::setupFigure() {
     QList<Point3D> points;
 
     points
@@ -186,8 +315,7 @@ QList<Facet3D> Projection::figure() {
         << Point3D(1, 0, 1)
         << Point3D(0, 0, 1)
     ;
-
-    facets << Facet3D(points);
+    m_figure << new Facet3D(points, 1, Qt::darkGray);
 
     points.clear();
     points
@@ -195,8 +323,7 @@ QList<Facet3D> Projection::figure() {
         << Point3D(1,   0, 0)
         << Point3D(0.5, 1, 0.5)
     ;
-
-    facets << Facet3D(points);
+    m_figure << new Facet3D(points, 2, Qt::red);
 
     points.clear();
     points
@@ -204,8 +331,7 @@ QList<Facet3D> Projection::figure() {
         << Point3D(1,   0, 1)
         << Point3D(0.5, 1, 0.5)
     ;
-
-    facets << Facet3D(points);
+    m_figure << new Facet3D(points, 3, Qt::blue);
 
     points.clear();
     points
@@ -213,8 +339,7 @@ QList<Facet3D> Projection::figure() {
         << Point3D(0,   0, 1)
         << Point3D(0.5, 1, 0.5)
     ;
-
-    facets << Facet3D(points);
+    m_figure << new Facet3D(points, 4, Qt::green);
 
     points.clear();
     points
@@ -222,26 +347,7 @@ QList<Facet3D> Projection::figure() {
         << Point3D(0,   0, 0)
         << Point3D(0.5, 1, 0.5)
     ;
-
-    facets << Facet3D(points);
-
-    return facets;
-}
-
-QList<Segment3D> Projection::axes() {
-    QList<Segment3D> segments;
-
-    segments
-        << segment3D(0, 0, 0, 100,   0,   0)
-        << segment3D(0, 0, 0,   0, 100,   0)
-        << segment3D(0, 0, 0,   0,   0, 100)
-    ;
-
-    return segments;
-}
-
-Segment3D Projection::segment3D(double x1, double y1, double z1, double x2, double y2, double z2) {
-    return Segment3D(Point3D(x1, y1, z1), Point3D(x2, y2, z2));
+    m_figure << new Facet3D(points, 5, Qt::yellow);
 }
 
 void Projection::move(double horizontal, double vertical) {
