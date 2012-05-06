@@ -1,0 +1,22 @@
+svg {
+  border: solid 1px #666;
+  overflow: hidden;
+  display: block;
+  margin: 20px auto 0;
+}
+
+path {
+  stroke: #000;
+  stroke-width: .5px;
+}
+
+/* color scheme by colorbrewer2.org */
+.color9-0 { fill: #F2F2F2; }
+.color9-1 { fill: #FBB4AE; }
+.color9-2 { fill: #B3CDE3; }
+.color9-3 { fill: #CCEBC5; }
+.color9-4 { fill: #DECBE4; }
+.color9-5 { fill: #FED9A6; }
+.color9-6 { fill: #FFFFCC; }
+.color9-7 { fill: #E5D8BD; }
+.color9-8 { fill: #FDDAEC; }
