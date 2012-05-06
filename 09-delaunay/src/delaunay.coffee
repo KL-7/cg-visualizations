@@ -5,66 +5,91 @@ class Vertex
   constructor: (@x, @y) ->
   toArray: -> [@x, @y]
   atan2: (vertex) -> Math.atan2(@y - vertex.y, @x - vertex.x)
+  toString: -> 'Vertex(' + @x + ', ' + @y + ')'
 
 
 class Edge
   constructor: (@v1, @v2) ->
   vertices: -> [@v1, @v2]
   incident: (v) -> @v1 == v || @v2 == v
-  otherVertex: (v) -> (if v == @v1 then @v2 else @v1) if incident(v)
+  otherVertex: (v) -> (if v == @v1 then @v2 else @v1) if this.incident(v)
   toArray: -> [@v1.toArray(), @v2.toArray()]
+  toString: -> 'Edge(' + _.sortBy(this.vertices(), (v) -> v.toArray()).join(', ') + ')'
+
+
+class Set
+  constructor: (array) ->
+    @set = {}
+    this.addAll(array) if array
+  addAll: (array) -> _.each(array, (e) => this.add(e))
+  add: (e) -> @set[e] = e
+  get: (e) -> @set[e]
+  include: (e) -> @set.hasOwnProperty(e)
+  remove: (e) -> delete @set[e]
+  toArray: -> v for own _, v of @set
+  extend: (s) ->
+    this.addAll(s.toArray)
+    this
 
 
 class Delaunay
   constructor: (@points) ->
 
-  build: (points) ->
-    edges = divideAndConquer(this.sortedVertices(points))
+  build: ->
+    this.divideAndConquer(this.sortedVertices(@points)).toArray()
 
   divideAndConquer: (vertices) ->
+    console.log 'divideAndConquer: ' + vertices.length + ' vertices'
     if vertices.length < 2
-      return []
+      return {}
     else if vertices.length == 2
-      return [new Edge(vertices[0], vertices[1])]
+      return new Set([new Edge(vertices[0], vertices[1])])
     else if vertices.length == 3
-      return [
+      return new Set([
         new Edge(vertices[0], vertices[1]),
         new Edge(vertices[1], vertices[2]),
         new Edge(vertices[2], vertices[0])
-      ]
+      ])
 
     [leftVertices, rightVertices] = this.splitVertices(vertices)
 
-    leftTriangulation = this.buildDelaunay(leftVertices)
-    rightTriangulation = this.buildDelaunay(rightVertices)
+    leftTriangulation = this.divideAndConquer(leftVertices)
+    rightTriangulation = this.divideAndConquer(rightVertices)
 
-    [bottomEdge, topEdge] = this.limitEdges(leftSet, rightSet)
+    [bottomEdge, topEdge] = this.limitEdges(leftVertices, rightVertices)
     [leftVertex, rightVertex] = bottomEdge.vertices()
 
-    edges = [new Edge(leftVertex, rightVertex)]
+    edges = new Set([bottomEdge])
 
     while leftVertex != topEdge.v1 && rightVertex != topEdge.v2
       leftAdjacent = this.verticesAbove(this.adjacent(leftTriangulation, leftVertex), leftVertex, rightVertex)
       rightAdjacent = this.verticesAbove(this.adjacent(rightTriangulation, rightVertex), leftVertex, rightVertex)
 
-      newLeft = this.selectNewVertex(leftAdjacent, leftVertex, rightVertex, leftTriangulation)
-      newLeft = this.selectNewVertex(rightAdjacent, leftVertex, rightVertex, rightTriangulation)
+      leftAtan2 = rightVertex.atan2(leftVertex)
+      rightAtan2 = leftVertex.atan2(rightVertex)
+
+      leftAdjacent = _.sortBy leftAdjacent, (v) -> v.atan2(leftVertex) - leftAtan2
+      rightAdjacent = _.sortBy rightAdjacent, (v) -> v.atan2(rightAdjacent) - rightAtan2
+
+      newLeft = this.selectNext(leftTriangulation, leftVertex, leftAdjacent, leftVertex, rightVertex)
+      newRight = this.selectNext(rightTriangulation, rightVertex, rightAdjacent, leftVertex, rightVertex)
 
       if this.inCircle(leftVertex, rightVertex, newLeft, newRight)
         leftVertex = newLeft
       else
         rightVertex = newRight
 
-      edges.push(new Edge(leftVertex, rightVertex))
+      newEdge = new Edge(leftVertex, rightVertex)
+      edges[newEdge] = newEdge
 
-    edges.concat(leftTriangulation).concat(rightTriangulation)
+    edges.extend(leftTriangulation).extend(rightTriangulation)
 
   # convert a list of points into a list of vertices sorted by (x, y)-coordinate
   sortedVertices: (points) -> _.sortBy (new Vertex(p[0], p[1]) for p in points), (v) -> v.toArray()
 
   # splits sorted by x-coordinate sequence of vertices in two
   splitVertices: (vertices) ->
-    m = Mathh.floor(vertices.length / 2)
+    m = Math.floor(vertices.length / 2)
     [vertices.slice(0, m), vertices.slice(m)]
 
   # returns bottom and top limit edges for two sorted sequencies of vertices
@@ -94,18 +119,30 @@ class Delaunay
       h.push(v)
     h
 
+  selectNext: (triangulation, vertex, adjacents, left, right) ->
+    adjacents = adjacents.clone()
+    newVertex = adjacents.pop()
+    while next = adjacents.pop()
+      if this.inCircle(left, right, newVertex, next)
+        delete triangulation[new Edge(vertex, newVertex)]
+        newVertex = next
+      else
+        break
+
+    return newVertex
+
   # calculates turn: 0 - no turn, -1 - left turn, 1 - right turn
   turn: (v1, v2, v3) ->
     r = (v2.x - v1.x) * (v3.y - v1.y) - (v2.y - v1.y) * (v3.x - v1.x)
-    if r > 0 then 1 else if r < 0 then -1 else 0
+    if r > 0 then -1 else if r < 0 then 1 else 0
 
   # returns vertices adjacent to the vertex in the triangulation
   adjacent: (triangulation, vertex) ->
     # TODO: remove full look-up by storing a reference to adjacent vertices (or incident edges) in the vertex
-    edge.otherVertex(vertex) for edge in triangulation).filter((v) -> v?
+    (edge.otherVertex(vertex) for edge in triangulation.toArray()).filter (v) -> v?
 
   # returnes vertices that are 'above' the line formed by left and right vertices
-  verticesAbove: (vertices, left, right) -> vertices.filter (v) -> this.turn(left, right, v) == -1
+  verticesAbove: (vertices, left, right) -> vertices.filter (v) => this.turn(left, right, v) == -1
 
   # returns true if d is within (a, b, c) triangle's circumcircle
   inCircle: (a, b, c, d) ->
@@ -115,4 +152,4 @@ class Delaunay
     adx * (bdy * cd2 - cdy * bd2) - bdx * (ady * cd2 - cdy * ad2) + cdx * (ady * bd2 - bdy * ad2) > 0
 
 
-window[cls] = eval(cls) for cls in ['Edge', 'Vertex', 'Delaunay']
+window[cls] = eval(cls) for cls in ['Edge', 'Vertex', 'Delaunay', 'Set']
