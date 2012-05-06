@@ -10,6 +10,11 @@ path {
   stroke-width: .5px;
 }
 
+.vertex-0 {
+  fill: white;
+  stroke: black;
+}
+
 /* color scheme by colorbrewer2.org */
 .color9-0 { fill: #F2F2F2; }
 .color9-1 { fill: #FBB4AE; }
