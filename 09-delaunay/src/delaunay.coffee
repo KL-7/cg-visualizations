@@ -33,10 +33,10 @@ class Delaunay
         new Edge(vertices[2], vertices[0])
       ]
 
-    [leftSet, rightSet] = this.splitVertices(vertices)
+    [leftVertices, rightVertices] = this.splitVertices(vertices)
 
-    leftTriangulation = this.buildDelaunay(leftSet)
-    rightTriangulation = this.buildDelaunay(rightSet)
+    leftTriangulation = this.buildDelaunay(leftVertices)
+    rightTriangulation = this.buildDelaunay(rightVertices)
 
     [bottomEdge, topEdge] = this.limitEdges(leftSet, rightSet)
     [leftVertex, rightVertex] = bottomEdge.vertices()
@@ -44,8 +44,8 @@ class Delaunay
     edges = [new Edge(leftVertex, rightVertex)]
 
     while leftVertex != topEdge.v1 && rightVertex != topEdge.v2
-      leftAdjacent = this.adjacent(leftTriangulation, leftVertex).clone().reverse()
-      rightAdjacent = this.adjacent(leftTriangulation, leftVertex)
+      leftAdjacent = this.verticesAbove(this.adjacent(leftTriangulation, leftVertex), leftVertex, rightVertex)
+      rightAdjacent = this.verticesAbove(this.adjacent(rightTriangulation, rightVertex), leftVertex, rightVertex)
 
       newLeft = this.selectNewVertex(leftAdjacent, leftVertex, rightVertex, leftTriangulation)
       newLeft = this.selectNewVertex(rightAdjacent, leftVertex, rightVertex, rightTriangulation)
@@ -99,10 +99,13 @@ class Delaunay
     r = (v2.x - v1.x) * (v3.y - v1.y) - (v2.y - v1.y) * (v3.x - v1.x)
     if r > 0 then 1 else if r < 0 then -1 else 0
 
-  # returns vertices adjacent to the vertex in the triangulation, sorted clockwise
+  # returns vertices adjacent to the vertex in the triangulation
   adjacent: (triangulation, vertex) ->
     # TODO: remove full look-up by storing a reference to adjacent vertices (or incident edges) in the vertex
-    _.sortBy (edge.otherVertex(vertex) for edge in triangulation).filter((v) -> v?), (v) -> v.atan2(vertex)
+    edge.otherVertex(vertex) for edge in triangulation).filter((v) -> v?
+
+  # returnes vertices that are 'above' the line formed by left and right vertices
+  verticesAbove: (vertices, left, right) -> vertices.filter (v) -> this.turn(left, right, v) == -1
 
   # returns true if d is within (a, b, c) triangle's circumcircle
   inCircle: (a, b, c, d) ->
