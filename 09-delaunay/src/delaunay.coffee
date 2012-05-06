@@ -6,17 +6,6 @@ class Vertex
   toArray: -> [@x, @y]
   atan2: (vertex) -> Math.atan2(@y - vertex.y, @x - vertex.x)
 
-  @compare: (v1, v2) ->
-    if v1.x == v2.x && v1.y == v2.y
-      0
-    else
-      if v1.x < v2.x || v1.x == v2.x && v1.y < v2.y then -1 else 1
-
-  @compareByAtan2: (v1, v2, vertext) ->
-    a1 = v1.atan2(vertex)
-    a2 = v2.atan2(vertex)
-    if a1 < a2 then -1 else if a1 > a2 then 1 else 0
-
 
 class Edge
   constructor: (@v1, @v2) ->
@@ -71,7 +60,7 @@ class Delaunay
     edges.concat(leftTriangulation).concat(rightTriangulation)
 
   # convert a list of points into a list of vertices sorted by (x, y)-coordinate
-  sortedVertices: (points) -> (new Vertex(p[0], p[1]) for p in points).sort Vertex.compare
+  sortedVertices: (points) -> _.sortBy (new Vertex(p[0], p[1]) for p in points), (v) -> v.toArray()
 
   # splits sorted by x-coordinate sequence of vertices in two
   splitVertices: (vertices) ->
@@ -113,8 +102,7 @@ class Delaunay
   # returns vertices adjacent to the vertex in the triangulation, sorted clockwise
   adjacent: (triangulation, vertex) ->
     # TODO: remove full look-up by storing a reference to adjacent vertices (or incident edges) in the vertex
-    vertices = [edge.otherVertex(vertex) for edge in triangulation].filter (v) -> v?
-    vertices.sort (v1, v2) -> Vertex.compareByAtan2(v1, v2, vertex)
+    _.sortBy (edge.otherVertex(vertex) for edge in triangulation).filter((v) -> v?), (v) -> v.atan2(vertex)
 
   # returns true if d is within (a, b, c) triangle's circumcircle
   inCircle: (a, b, c, d) ->
