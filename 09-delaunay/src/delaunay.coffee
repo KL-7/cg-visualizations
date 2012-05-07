@@ -2,9 +2,12 @@ Array.prototype.clone = -> this.slice(0)
 
 
 class Vertex
-  constructor: (@x, @y) ->
-  toArray: -> [@x, @y]
+  constructor: (@x, @y) -> @edges = new Set
+  addEdge: (edge) -> @edges.add(edge)
+  removeEdge: (edge) -> @edges.remove(edge)
+  adjacent: -> _.map(@edges.toArray(), (edge) => edge.otherVertex(this))
   atan2: (vertex) -> Math.atan2(@y - vertex.y, @x - vertex.x)
+  toArray: -> [@x, @y]
   toString: -> 'Vertex(' + @x + ', ' + @y + ')'
   @compare: (v1, v2) ->
     if (v1.x == v2.x && v1.y == v2.y) then 0 else (if v1.x < v2.x || v1.x == v2.x && v1.y < v2.y then -1 else 1)
@@ -14,6 +17,12 @@ class Edge
   constructor: (@v1, @v2) ->
   vertices: -> [@v1, @v2]
   incident: (v) -> @v1 == v || @v2 == v
+  connect: ->
+    _.each(this.vertices(), (v) => v.addEdge(this))
+    this
+  disconnect: ->
+    _.each(this.vertices(), (v) => v.removeEdge(this))
+    this
   otherVertex: (v) -> (if v == @v1 then @v2 else @v1) if this.incident(v)
   toArray: -> [@v1.toArray(), @v2.toArray()]
   toString: -> 'Edge(' + _.sortBy(this.vertices(), (v) -> v.toArray()).join(', ') + ')'
@@ -48,18 +57,19 @@ class Delaunay
   divideAndConquer: (vertices) ->
     this.log '========='
     this.log 'divideAndConquer (' + vertices.length + ' vertices): ' + vertices
+
     if vertices.length < 2
       this.log '<<<< (<2)'
       return {}
     else if vertices.length == 2
       this.log '<<<< (2)'
-      return new Set([new Edge(vertices[0], vertices[1])])
+      return new Set([new Edge(vertices[0], vertices[1]).connect()])
     else if vertices.length == 3
       this.log '<<<< (3)'
       return new Set([
-        new Edge(vertices[0], vertices[1]),
-        new Edge(vertices[1], vertices[2]),
-        new Edge(vertices[2], vertices[0])
+        new Edge(vertices[0], vertices[1]).connect(),
+        new Edge(vertices[1], vertices[2]).connect(),
+        new Edge(vertices[2], vertices[0]).connect()
       ])
 
     [leftVertices, rightVertices] = this.splitVertices(vertices)
@@ -75,11 +85,11 @@ class Delaunay
 
     this.log 'limit edges: ' + bottomEdge + ', ' + topEdge
 
-    edges = new Set([bottomEdge])
+    edges = new Set([bottomEdge.connect()])
 
     while !(leftVertex == topEdge.v1 && rightVertex == topEdge.v2)
-      leftAdjacent = this.verticesAbove(this.adjacent(leftTriangulation, leftVertex), leftVertex, rightVertex)
-      rightAdjacent = this.verticesAbove(this.adjacent(rightTriangulation, rightVertex), leftVertex, rightVertex)
+      leftAdjacent = this.verticesAbove(leftVertex.adjacent(), leftVertex, rightVertex)
+      rightAdjacent = this.verticesAbove(rightVertex.adjacent(), leftVertex, rightVertex)
 
       leftAtan2 = rightVertex.atan2(leftVertex)
       rightAtan2 = leftVertex.atan2(rightVertex)
@@ -95,7 +105,7 @@ class Delaunay
       else
         leftVertex = newLeft
 
-      if (leftVertex && rightVertex) then edges.add(new Edge(leftVertex, rightVertex)) else break
+      if (leftVertex && rightVertex) then edges.add(new Edge(leftVertex, rightVertex).connect()) else break
 
     this.log 'edges: ' + edges
 
@@ -138,12 +148,13 @@ class Delaunay
       h.push(v)
     h
 
+  # select next vertex for the bottom limit edge from the vertices adjacent to the vertex
   selectNext: (triangulation, vertex, adjacents, left, right) ->
     adjacents = adjacents.clone().reverse()
     newVertex = adjacents.pop()
     while next = adjacents.pop()
       if this.inCircle(left, right, newVertex, next)
-        triangulation.remove(new Edge(vertex, newVertex))
+        triangulation.remove(new Edge(vertex, newVertex).disconnect())
         newVertex = next
       else
         break
@@ -154,11 +165,6 @@ class Delaunay
   turn: (v1, v2, v3) ->
     r = (v2.x - v1.x) * (v3.y - v1.y) - (v2.y - v1.y) * (v3.x - v1.x)
     if r > 0 then -1 else if r < 0 then 1 else 0
-
-  # returns vertices adjacent to the vertex in the triangulation
-  adjacent: (triangulation, vertex) ->
-    # TODO: remove full look-up by storing a reference to adjacent vertices (or incident edges) in the vertex
-    (edge.otherVertex(vertex) for edge in triangulation.toArray()).filter (v) -> v?
 
   # returnes vertices that are 'above' the line formed by left and right vertices
   verticesAbove: (vertices, left, right) -> vertices.filter (v) => this.turn(left, right, v) == -1
