@@ -83,8 +83,8 @@ class Delaunay
       leftAtan2 = rightVertex.atan2(leftVertex)
       rightAtan2 = leftVertex.atan2(rightVertex)
 
-      leftAdjacent = _.sortBy leftAdjacent, (v) -> v.atan2(leftVertex) - leftAtan2
-      rightAdjacent = _.sortBy rightAdjacent, (v) -> rightAtan2 - v.atan2(rightVertex)
+      leftAdjacent = _.sortBy leftAdjacent, (v) -> (v.atan2(leftVertex) - leftAtan2 + 360) % 360
+      rightAdjacent = _.sortBy rightAdjacent, (v) -> (rightAtan2 - v.atan2(rightVertex) + 360) % 360
 
       newLeft = this.selectNext(leftTriangulation, leftVertex, leftAdjacent, leftVertex, rightVertex)
       newRight = this.selectNext(rightTriangulation, rightVertex, rightAdjacent, leftVertex, rightVertex)
