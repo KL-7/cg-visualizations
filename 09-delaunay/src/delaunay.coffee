@@ -36,25 +36,26 @@ class Set
 
 
 class Delaunay
-  constructor: (@points) ->
-    console.log 'points: ' + _.map(@points, (p) -> '[' + p + ']')
+  constructor: (@points, @debug) ->
+    this.log 'points: ' + _.map(@points, (p) -> '[' + p + ']')
 
   build: ->
     res = this.divideAndConquer(this.sortedVertices(@points)).toArray()
-    console.log '>>>>>>'
-    console.log 'edges (' + res.length + '): ' + res.join(',')
+    this.log '>>>>>>'
+    this.log 'edges (' + res.length + '): ' + res.join(',')
+    res
 
   divideAndConquer: (vertices) ->
-    console.log '========='
-    console.log 'divideAndConquer (' + vertices.length + ' vertices): ' + vertices
+    this.log '========='
+    this.log 'divideAndConquer (' + vertices.length + ' vertices): ' + vertices
     if vertices.length < 2
-      console.log '<<<< (<2)'
+      this.log '<<<< (<2)'
       return {}
     else if vertices.length == 2
-      console.log '<<<< (2)'
+      this.log '<<<< (2)'
       return new Set([new Edge(vertices[0], vertices[1])])
     else if vertices.length == 3
-      console.log '<<<< (3)'
+      this.log '<<<< (3)'
       return new Set([
         new Edge(vertices[0], vertices[1]),
         new Edge(vertices[1], vertices[2]),
@@ -66,13 +67,13 @@ class Delaunay
     leftTriangulation = this.divideAndConquer(leftVertices)
     rightTriangulation = this.divideAndConquer(rightVertices)
 
-    console.log 'leftTr: ' + leftTriangulation
-    console.log 'rightTr: ' + rightTriangulation
+    this.log 'leftTr: ' + leftTriangulation
+    this.log 'rightTr: ' + rightTriangulation
 
     [bottomEdge, topEdge] = this.limitEdges(leftVertices, rightVertices)
     [leftVertex, rightVertex] = bottomEdge.vertices()
 
-    console.log 'limit edges: ' + bottomEdge + ', ' + topEdge
+    this.log 'limit edges: ' + bottomEdge + ', ' + topEdge
 
     edges = new Set([bottomEdge])
 
@@ -97,10 +98,10 @@ class Delaunay
       newEdge = new Edge(leftVertex, rightVertex)
       edges.add(newEdge)
 
-    console.log 'edges: ' + edges
+    this.log 'edges: ' + edges
 
     edges.extend(leftTriangulation).extend(rightTriangulation)
-    console.log 'result: ' + edges
+    this.log 'result: ' + edges
     edges
 
   # convert a list of points into a list of vertices sorted by (x, y)-coordinate
@@ -169,6 +170,8 @@ class Delaunay
     [bdx, bdy, bd2] = [(b.x - d.x), (b.y - d.y), (b.x * b.x - d.x * d.x + b.y * b.y - d.y * d.y)]
     [cdx, cdy, cd2] = [(c.x - d.x), (c.y - d.y), (c.x * c.x - d.x * d.x + c.y * c.y - d.y * d.y)]
     adx * (bdy * cd2 - cdy * bd2) - bdx * (ady * cd2 - cdy * ad2) + cdx * (ady * bd2 - bdy * ad2) > 0
+
+  log: (msg) -> console.log(msg) if @debug
 
 
 window[cls] = eval(cls) for cls in ['Edge', 'Vertex', 'Delaunay', 'Set']
