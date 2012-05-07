@@ -40,26 +40,16 @@ class Set
 
 class Delaunay
   constructor: (@points, @debug) ->
-    this.log 'points: ' + _.map(@points, (p) -> '[' + p + ']')
 
   build: ->
-    res = this.divideAndConquer(this.sortedVertices(@points)).toArray()
-    this.log '>>>>>>'
-    this.log 'edges (' + res.length + '): ' + res.join(',')
-    res
+    this.divideAndConquer(this.sortedVertices(@points)).toArray()
 
   divideAndConquer: (vertices) ->
-    this.log '========='
-    this.log 'divideAndConquer (' + vertices.length + ' vertices): ' + vertices
-
     if vertices.length < 2
-      this.log '<<<< (<2)'
       return {}
     else if vertices.length == 2
-      this.log '<<<< (2)'
       return new Set([new Edge(vertices[0], vertices[1]).connect()])
     else if vertices.length == 3
-      this.log '<<<< (3)'
       return new Set([
         new Edge(vertices[0], vertices[1]).connect(),
         new Edge(vertices[1], vertices[2]).connect(),
@@ -71,13 +61,8 @@ class Delaunay
     leftTriangulation = this.divideAndConquer(leftVertices)
     rightTriangulation = this.divideAndConquer(rightVertices)
 
-    this.log 'leftTr: ' + leftTriangulation
-    this.log 'rightTr: ' + rightTriangulation
-
     [bottomEdge, topEdge] = this.limitEdges(leftVertices, rightVertices)
     [leftVertex, rightVertex] = bottomEdge.vertices()
-
-    this.log 'limit edges: ' + bottomEdge + ', ' + topEdge
 
     edges = new Set([bottomEdge.connect()])
 
@@ -101,11 +86,7 @@ class Delaunay
 
       if (leftVertex && rightVertex) then edges.add(new Edge(leftVertex, rightVertex).connect()) else break
 
-    this.log 'edges: ' + edges
-
     edges.extend(leftTriangulation).extend(rightTriangulation)
-    this.log 'result: ' + edges
-    edges
 
   # convert a list of points into a list of vertices sorted by (x, y)-coordinate
   sortedVertices: (points) -> (new Vertex(p[0], p[1]) for p in points).sort Vertex.compare
