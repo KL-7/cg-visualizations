@@ -4,9 +4,11 @@ verticesCount = 6
 
 svg = d3.select('#canvas').append('svg').attr('width', width).attr('height', height)
 
-window.points = d3.range(verticesCount - 4)
-  .map(-> [Math.random() * width, Math.random() * height])
-  .concat([[0, 0], [0, height], [width, 0], [width, height]])
+# window.points = d3.range(verticesCount - 4)
+#   .map(-> [Math.round(Math.random() * width), Math.round(Math.random() * height)])
+#   .concat([[0, 0], [0, height], [width, 0], [width, height]])
+
+window.points = [[320, 230], [500, 120], [110, 70], [300, 310], [500, 300], [50, 250], [250, 130]]
 
 svg.selectAll('circle')
   .data(points)

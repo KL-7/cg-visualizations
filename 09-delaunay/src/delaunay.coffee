@@ -6,6 +6,8 @@ class Vertex
   toArray: -> [@x, @y]
   atan2: (vertex) -> Math.atan2(@y - vertex.y, @x - vertex.x)
   toString: -> 'Vertex(' + @x + ', ' + @y + ')'
+  @compare: (v1, v2) ->
+    if (v1.x == v2.x && v1.y == v2.y) then 0 else (if v1.x < v2.x || v1.x == v2.x && v1.y < v2.y then -1 else 1)
 
 
 class Edge
@@ -27,24 +29,32 @@ class Set
   include: (e) -> @set.hasOwnProperty(e)
   remove: (e) -> delete @set[e]
   toArray: -> v for own _, v of @set
+  toString: -> 'Set(' + this.toArray().join(',') + ')'
   extend: (s) ->
-    this.addAll(s.toArray)
+    this.addAll(s.toArray())
     this
 
 
 class Delaunay
   constructor: (@points) ->
+    console.log 'points: ' + _.map(@points, (p) -> '[' + p + ']')
 
   build: ->
-    this.divideAndConquer(this.sortedVertices(@points)).toArray()
+    res = this.divideAndConquer(this.sortedVertices(@points)).toArray()
+    console.log '>>>>>>'
+    console.log 'edges (' + res.length + '): ' + res.join(',')
 
   divideAndConquer: (vertices) ->
-    console.log 'divideAndConquer: ' + vertices.length + ' vertices'
+    console.log '========='
+    console.log 'divideAndConquer (' + vertices.length + ' vertices): ' + vertices
     if vertices.length < 2
+      console.log '<<<< (<2)'
       return {}
     else if vertices.length == 2
+      console.log '<<<< (2)'
       return new Set([new Edge(vertices[0], vertices[1])])
     else if vertices.length == 3
+      console.log '<<<< (3)'
       return new Set([
         new Edge(vertices[0], vertices[1]),
         new Edge(vertices[1], vertices[2]),
@@ -56,12 +66,17 @@ class Delaunay
     leftTriangulation = this.divideAndConquer(leftVertices)
     rightTriangulation = this.divideAndConquer(rightVertices)
 
+    console.log 'leftTr: ' + leftTriangulation
+    console.log 'rightTr: ' + rightTriangulation
+
     [bottomEdge, topEdge] = this.limitEdges(leftVertices, rightVertices)
     [leftVertex, rightVertex] = bottomEdge.vertices()
 
+    console.log 'limit edges: ' + bottomEdge + ', ' + topEdge
+
     edges = new Set([bottomEdge])
 
-    while leftVertex != topEdge.v1 && rightVertex != topEdge.v2
+    while !(leftVertex == topEdge.v1 && rightVertex == topEdge.v2)
       leftAdjacent = this.verticesAbove(this.adjacent(leftTriangulation, leftVertex), leftVertex, rightVertex)
       rightAdjacent = this.verticesAbove(this.adjacent(rightTriangulation, rightVertex), leftVertex, rightVertex)
 
@@ -69,23 +84,27 @@ class Delaunay
       rightAtan2 = leftVertex.atan2(rightVertex)
 
       leftAdjacent = _.sortBy leftAdjacent, (v) -> v.atan2(leftVertex) - leftAtan2
-      rightAdjacent = _.sortBy rightAdjacent, (v) -> v.atan2(rightAdjacent) - rightAtan2
+      rightAdjacent = _.sortBy rightAdjacent, (v) -> rightAtan2 - v.atan2(rightVertex)
 
       newLeft = this.selectNext(leftTriangulation, leftVertex, leftAdjacent, leftVertex, rightVertex)
       newRight = this.selectNext(rightTriangulation, rightVertex, rightAdjacent, leftVertex, rightVertex)
 
-      if this.inCircle(leftVertex, rightVertex, newLeft, newRight)
-        leftVertex = newLeft
-      else
+      if !newLeft || newRight && this.inCircle(leftVertex, rightVertex, newLeft, newRight)
         rightVertex = newRight
+      else
+        leftVertex = newLeft
 
       newEdge = new Edge(leftVertex, rightVertex)
-      edges[newEdge] = newEdge
+      edges.add(newEdge)
+
+    console.log 'edges: ' + edges
 
     edges.extend(leftTriangulation).extend(rightTriangulation)
+    console.log 'result: ' + edges
+    edges
 
   # convert a list of points into a list of vertices sorted by (x, y)-coordinate
-  sortedVertices: (points) -> _.sortBy (new Vertex(p[0], p[1]) for p in points), (v) -> v.toArray()
+  sortedVertices: (points) -> (new Vertex(p[0], p[1]) for p in points).sort Vertex.compare
 
   # splits sorted by x-coordinate sequence of vertices in two
   splitVertices: (vertices) ->
@@ -120,11 +139,11 @@ class Delaunay
     h
 
   selectNext: (triangulation, vertex, adjacents, left, right) ->
-    adjacents = adjacents.clone()
+    adjacents = adjacents.clone().reverse()
     newVertex = adjacents.pop()
     while next = adjacents.pop()
       if this.inCircle(left, right, newVertex, next)
-        delete triangulation[new Edge(vertex, newVertex)]
+        triangulation.remove(new Edge(vertex, newVertex))
         newVertex = next
       else
         break
