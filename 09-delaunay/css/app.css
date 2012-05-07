@@ -10,9 +10,9 @@ path {
   stroke-width: .5px;
 }
 
-.vertex-0 {
-  fill: white;
-  stroke: black;
+button {
+  margin: 20px auto 0;
+  display: block;
 }
 
 /* color scheme by colorbrewer2.org */
