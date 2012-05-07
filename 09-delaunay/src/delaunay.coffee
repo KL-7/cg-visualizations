@@ -7,8 +7,8 @@ class Vertex
   removeEdge: (edge) -> @edges.remove(edge)
   adjacent: -> _.map(@edges.toArray(), (edge) => edge.otherVertex(this))
   atan2: (vertex) -> Math.atan2(@y - vertex.y, @x - vertex.x)
-  toArray: -> if @_arr? then @_arr else @_arr = [@x, @y]
-  toString: -> if @_str? then @_str else @_str = 'Vertex(' + @x + ', ' + @y + ')'
+  toArray: -> [@x, @y]
+  toString: -> 'Vertex(' + @x + ', ' + @y + ')'
   @compare: (v1, v2) ->
     if (v1.x == v2.x && v1.y == v2.y) then 0 else (if v1.x < v2.x || v1.x == v2.x && v1.y < v2.y then -1 else 1)
 
@@ -21,7 +21,7 @@ class Edge
   disconnect: -> _.each(this.vertices(), (v) => v.removeEdge(this)); this
   otherVertex: (v) -> (if v == @v1 then @v2 else @v1) if this.incident(v)
   toArray: -> [@v1.toArray(), @v2.toArray()]
-  toString: -> if @_str? then @_str else @_str = 'Edge(' + _.sortBy(this.vertices(), (v) -> v.toArray()).join(', ') + ')'
+  toString: -> if @_str? then @_str else @_str = 'Edge(' + this.vertices().join(', ') + ')'
 
 
 class Set
@@ -38,28 +38,44 @@ class Set
   extend: (s) -> this.addAll(s.toArray()); this
 
 
+class Triangle
+  constructor: (v1, v2, v3) -> [@v1, @v2, @v3] = [v1, v2, v3].sort Vertex.compare
+  vertices: -> [@v1, @v2, @v3]
+  toString: -> 'Triangle(' + this.vertices().join(', ') + ')'
+  toArray: -> _.map(this.vertices(), (v) -> v.toArray())
+
+
 class Delaunay
   constructor: (@points, @debug) ->
 
   build: ->
-    this.divideAndConquer(this.sortedVertices(@points)).toArray()
+    [edges, vertices] = this.divideAndConquer(this.sortedVertices(@points))
+    triangles = new Set
+    _.each vertices, (vertex) ->
+      incidentEdges = _.sortBy(vertex.edges.toArray(), (e) -> e.otherVertex(vertex).atan2(vertex))
+      _.each incidentEdges, (edge, i) ->
+        v1 = edge.otherVertex(vertex)
+        v2 = incidentEdges[(i + 1) % incidentEdges.length].otherVertex(vertex)
+        triangles.add(new Triangle(vertex, v1, v2)) if edges.include(new Edge(v1, v2))
+
+    _.map(triangles.toArray(), (t) -> t.toArray())
 
   divideAndConquer: (vertices) ->
     if vertices.length < 2
-      return {}
+      return [{}, vertices]
     else if vertices.length == 2
-      return new Set([new Edge(vertices[0], vertices[1]).connect()])
+      return [new Set([new Edge(vertices[0], vertices[1]).connect()]), vertices]
     else if vertices.length == 3
-      return new Set([
+      return [new Set([
         new Edge(vertices[0], vertices[1]).connect(),
         new Edge(vertices[1], vertices[2]).connect(),
         new Edge(vertices[2], vertices[0]).connect()
-      ])
+      ]), vertices]
 
     [leftVertices, rightVertices] = this.splitVertices(vertices)
 
-    leftTriangulation = this.divideAndConquer(leftVertices)
-    rightTriangulation = this.divideAndConquer(rightVertices)
+    leftTriangulation = this.divideAndConquer(leftVertices)[0]
+    rightTriangulation = this.divideAndConquer(rightVertices)[0]
 
     [bottomEdge, topEdge] = this.limitEdges(leftVertices, rightVertices)
     [leftVertex, rightVertex] = bottomEdge.vertices()
@@ -86,7 +102,7 @@ class Delaunay
 
       if (leftVertex && rightVertex) then edges.add(new Edge(leftVertex, rightVertex).connect()) else break
 
-    edges.extend(leftTriangulation).extend(rightTriangulation)
+    [edges.extend(leftTriangulation).extend(rightTriangulation), vertices]
 
   # convert a list of points into a list of vertices sorted by (x, y)-coordinate
   sortedVertices: (points) -> (new Vertex(p[0], p[1]) for p in points).sort Vertex.compare
@@ -154,4 +170,4 @@ class Delaunay
   log: (msg) -> console.log(msg) if @debug
 
 
-window[cls] = eval(cls) for cls in ['Edge', 'Vertex', 'Delaunay', 'Set']
+window[cls] = eval(cls) for cls in ['Edge', 'Vertex', 'Delaunay', 'Set', 'Triangle']
