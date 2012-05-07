@@ -7,25 +7,21 @@ class Vertex
   removeEdge: (edge) -> @edges.remove(edge)
   adjacent: -> _.map(@edges.toArray(), (edge) => edge.otherVertex(this))
   atan2: (vertex) -> Math.atan2(@y - vertex.y, @x - vertex.x)
-  toArray: -> [@x, @y]
-  toString: -> 'Vertex(' + @x + ', ' + @y + ')'
+  toArray: -> if @_arr? then @_arr else @_arr = [@x, @y]
+  toString: -> if @_str? then @_str else @_str = 'Vertex(' + @x + ', ' + @y + ')'
   @compare: (v1, v2) ->
     if (v1.x == v2.x && v1.y == v2.y) then 0 else (if v1.x < v2.x || v1.x == v2.x && v1.y < v2.y then -1 else 1)
 
 
 class Edge
-  constructor: (@v1, @v2) ->
+  constructor: (@v1, @v2) -> [@v1, @v2] = [@v2, @v1] if @v2.x < @v1.x
   vertices: -> [@v1, @v2]
   incident: (v) -> @v1 == v || @v2 == v
-  connect: ->
-    _.each(this.vertices(), (v) => v.addEdge(this))
-    this
-  disconnect: ->
-    _.each(this.vertices(), (v) => v.removeEdge(this))
-    this
+  connect: -> _.each(this.vertices(), (v) => v.addEdge(this)); this
+  disconnect: -> _.each(this.vertices(), (v) => v.removeEdge(this)); this
   otherVertex: (v) -> (if v == @v1 then @v2 else @v1) if this.incident(v)
   toArray: -> [@v1.toArray(), @v2.toArray()]
-  toString: -> 'Edge(' + _.sortBy(this.vertices(), (v) -> v.toArray()).join(', ') + ')'
+  toString: -> if @_str? then @_str else @_str = 'Edge(' + _.sortBy(this.vertices(), (v) -> v.toArray()).join(', ') + ')'
 
 
 class Set
@@ -39,9 +35,7 @@ class Set
   remove: (e) -> delete @set[e]
   toArray: -> v for own _, v of @set
   toString: -> 'Set(' + this.toArray().join(',') + ')'
-  extend: (s) ->
-    this.addAll(s.toArray())
-    this
+  extend: (s) -> this.addAll(s.toArray()); this
 
 
 class Delaunay

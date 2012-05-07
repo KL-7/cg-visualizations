@@ -1,15 +1,15 @@
+window.VERTICES_COUNT = 500
+
 window.refresh = ->
-  width = 1100
-  height = 700
-  verticesCount = 1000
+  [width, height] = [1100, 700]
 
   d3.selectAll('svg').remove()
   svg = d3.select('#canvas').append('svg').attr('width', width).attr('height', height)
   referenceSvg = d3.select('#reference').append('svg').attr('width', width).attr('height', height)
 
-  points = d3.range(verticesCount - 4)
-      .map(-> [Math.random() * width, Math.random() * height])
-      .concat([[0, 0], [0, height], [width, 0], [width, height]])
+  points = d3.range(VERTICES_COUNT - 4)
+    .map(-> [Math.random() * width, Math.random() * height])
+    .concat([[0, 0], [0, height], [width, 0], [width, height]])
 
   d = new Date
   referenceSvg.selectAll('path')
