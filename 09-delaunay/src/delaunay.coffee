@@ -95,8 +95,7 @@ class Delaunay
       else
         leftVertex = newLeft
 
-      newEdge = new Edge(leftVertex, rightVertex)
-      edges.add(newEdge)
+      if (leftVertex && rightVertex) then edges.add(new Edge(leftVertex, rightVertex)) else break
 
     this.log 'edges: ' + edges
 

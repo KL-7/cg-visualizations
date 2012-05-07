@@ -1,15 +1,21 @@
-width = 700
-height = 400
-verticesCount = 20
+width = 1000
+height = 800
+verticesCount = 500
 
 svg = d3.select('#canvas').append('svg').attr('width', width).attr('height', height)
 referenceSvg = d3.select('#reference').append('svg').attr('width', width).attr('height', height)
 
 window.points = d3.range(verticesCount - 4)
-  .map(-> [Math.round(Math.random() * width), Math.round(Math.random() * height)])
+  # .map(-> [Math.round(Math.random() * width), Math.round(Math.random() * height)])
+  .map(-> [Math.random() * width, Math.random() * height])
   .concat([[0, 0], [0, height], [width, 0], [width, height]])
 
 # window.points = [[320, 230], [500, 120], [110, 70], [300, 310], [500, 300], [50, 250], [250, 130]]
+
+# window.points = [
+  # [0, 0], [0, 400], [700, 0], [700, 400], [350, 400]
+  # [546, 364], [601, 400], [149, 302], [74, 208], [243, 123], [91, 367], [0, 0], [0, 400], [700, 0], [700, 400]
+# ]
 
 # svg.selectAll('circle')
 #   .data(points)
