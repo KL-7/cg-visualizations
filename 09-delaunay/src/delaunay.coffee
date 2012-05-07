@@ -1,6 +1,3 @@
-Array.prototype.clone = -> this.slice(0)
-
-
 class Vertex
   constructor: (@x, @y) -> @edges = new Set
   addEdge: (edge) -> @edges.add(edge)
@@ -45,8 +42,8 @@ class Triangle
   toArray: -> _.map(this.vertices(), (v) -> v.toArray())
 
 
-class Delaunay
-  constructor: (@points, @debug) ->
+class window.Delaunay
+  constructor: (@points) ->
 
   build: ->
     [edges, vertices] = this.divideAndConquer(this.sortedVertices(@points))
@@ -141,7 +138,7 @@ class Delaunay
 
   # select next vertex for the bottom limit edge from the vertices adjacent to the vertex
   selectNext: (triangulation, vertex, adjacents, left, right) ->
-    adjacents = adjacents.clone().reverse()
+    adjacents = adjacents.reverse()
     newVertex = adjacents.pop()
     while next = adjacents.pop()
       if this.inCircle(left, right, newVertex, next)
@@ -166,8 +163,3 @@ class Delaunay
     [bdx, bdy, bd2] = [(b.x - d.x), (b.y - d.y), (b.x * b.x - d.x * d.x + b.y * b.y - d.y * d.y)]
     [cdx, cdy, cd2] = [(c.x - d.x), (c.y - d.y), (c.x * c.x - d.x * d.x + c.y * c.y - d.y * d.y)]
     adx * (bdy * cd2 - cdy * bd2) - bdx * (ady * cd2 - cdy * ad2) + cdx * (ady * bd2 - bdy * ad2) > 0
-
-  log: (msg) -> console.log(msg) if @debug
-
-
-window[cls] = eval(cls) for cls in ['Edge', 'Vertex', 'Delaunay', 'Set', 'Triangle']
