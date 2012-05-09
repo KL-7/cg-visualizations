@@ -4,6 +4,7 @@
 #include <QtGui>
 
 typedef QPair<QVector3D, QVector3D> Segment3D;
+typedef QVector3D Point3D;
 
 class Projection
 {
@@ -19,6 +20,8 @@ private:
     static const double MOVE_SCALE;
     static const double ROTATE_SCALE;
     static const double ZOOM_SCALE;
+    static const double POINT_RAIDUS;
+    static const int GRID_SIZE;
 
     QVector3D cop;
 
@@ -31,6 +34,17 @@ private:
     double vrpDistance;
     double viewWindowWidth;
     double viewWindowHeight;
+
+    QList<Point3D> m_surfacePoints;
+
+    Point3D pS0(double s);
+    Point3D pS1(double s);
+    Point3D p0T(double t);
+    Point3D p1T(double t);
+
+    Point3D cST(double s, double t);
+    Point3D qST(double s, double t);
+    Point3D bST(double s, double t);
 
     QVector3D vrp() { return cop + vrpDistance * vpn.normalized(); }
     QPointF uvMin() { return QPointF(-viewWindowWidth / 2, -viewWindowHeight / 2); }
@@ -46,7 +60,10 @@ private:
 
     QList<Segment3D> unitCube();
     QList<Segment3D> axes();
+    QList<Point3D> surfacePoints();
     Segment3D segment3D(double x1, double y1, double z1, double x2, double y2, double z2);
+
+    void renderPoints(QGraphicsScene *scene, const QList<Point3D> &points, const QMatrix4x4 &matrix);
     void renderSegments(QGraphicsScene *scene, const QList<Segment3D> &segments, const QMatrix4x4 &matrix);
 };
 

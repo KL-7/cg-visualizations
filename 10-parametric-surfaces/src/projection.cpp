@@ -4,9 +4,13 @@
 const double Projection::MOVE_SCALE = 10e-2;
 const double Projection::ROTATE_SCALE = 10e-1;
 const double Projection::ZOOM_SCALE = 10e-2;
+const double Projection::POINT_RAIDUS = 0.5;
+const int Projection::GRID_SIZE = 50;
+
+// Axes directions: x - forward, y - up, z - right.
 
 Projection::Projection() {
-    cop = QVector3D(-5, 0.5, 0.5);  // central of projection
+    cop = QVector3D(-1, 0.5, 0.5);  // center of projection
 
     vrpDistance = 4; // view reference point distance
 
@@ -18,6 +22,13 @@ Projection::Projection() {
 
     ff = -1;
     bb = 10;
+
+    if (pS0(0) != p0T(0)) qDebug() << "p(s, 0) != p(0, t) in (0, 0)";
+    if (pS0(1) != p1T(0)) qDebug() << "p(s, 0) != p(1, t) in (1, 0)";
+    if (pS1(0) != p0T(1)) qDebug() << "p(s, 1) != p(0, t) in (0, 1)";
+    if (pS1(1) != p1T(1)) qDebug() << "p(s, 1) != p(1, t) in (1, 1)";
+
+    m_surfacePoints = surfacePoints();
 }
 
 void Projection::render(QGraphicsScene *scene) {
@@ -27,8 +38,59 @@ void Projection::render(QGraphicsScene *scene) {
 
     scene->clear();
 
-    renderSegments(scene, unitCube(), matrix);
-    renderSegments(scene, axes(), matrix);
+    renderPoints(scene, m_surfacePoints, matrix);
+
+//    renderSegments(scene, unitCube(), matrix);
+//    renderSegments(scene, axes(), matrix);
+}
+
+Point3D Projection::pS0(double s) {
+    return Point3D(s, s - s * s, 0);
+}
+
+Point3D Projection::pS1(double s) {
+    return Point3D(s, s - s * s, 1);
+}
+
+Point3D Projection::p0T(double t) {
+    return Point3D(0, t - t * t, t);
+}
+
+Point3D Projection::p1T(double t) {
+    return Point3D(1, t - t * t, t);
+}
+
+Point3D Projection::cST(double s, double t) {
+    return qST(s, t) - bST(s, t);
+}
+
+Point3D Projection::qST(double s, double t) {
+    return t * pS1(s) + (1 - t) * pS0(s) + s * p1T(t) + (1 - s) * p0T(t);
+}
+
+Point3D Projection::bST(double s, double t) {
+    return s * (t * p1T(1) + (1 - t) * p1T(0)) + (1 - s) * (t * p0T(1) + (1 - t) * p0T(0));
+}
+
+QList<Point3D> Projection::surfacePoints() {
+    double step = 1.0 / GRID_SIZE;
+    QList<Point3D> points;
+
+    for (double s = 0; s <= 1; s += step) {
+        for (double t = 0; t <= 1; t += step) {
+            points << cST(s, t);
+        }
+    }
+
+    return points;
+}
+
+void Projection::renderPoints(QGraphicsScene *scene, const QList<Point3D> &points, const QMatrix4x4 &matrix) {
+    foreach (Point3D point, points) {
+        QRectF rect = QRectF(transformPoint(point, matrix), QSizeF(POINT_RAIDUS, POINT_RAIDUS))
+                .translated(-POINT_RAIDUS, -POINT_RAIDUS);
+        scene->addItem(new QGraphicsEllipseItem(rect));
+    }
 }
 
 void Projection::renderSegments(QGraphicsScene *scene, const QList<Segment3D> &segments, const QMatrix4x4 &matrix) {
